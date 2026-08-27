@@ -1,69 +1,23 @@
-import Image from "next/image";
+import Link from "next/link";
+import { SampleBanner } from "@/components/sample-banner";
+import { checklist, dashboardStats, recentVersions, sampleFile, timeline, workItems } from "@/lib/mock-data";
+
+function StatusIcon({ type }: { type: "ok" | "warn" | "info" }) {
+  const labels = { ok: "Đã hoàn thành", warn: "Cần xử lý", info: "Thông tin" };
+  return <span className={`status-icon status-${type}`} aria-label={labels[type]}>{type === "ok" ? "✓" : type === "warn" ? "!" : "i"}</span>;
+}
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+  return <div className="min-h-screen bg-slate-50 text-slate-900"><SampleBanner />
+    <header className="border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-[1500px] items-center justify-between px-6 py-3"><div className="flex items-center gap-8"><div><p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Hệ thống hỗ trợ</p><p className="font-semibold">Xây dựng văn bản quy phạm pháp luật</p></div><nav className="hidden gap-1 lg:flex" aria-label="Điều hướng chính">{["Tổng quan", "Hồ sơ", "Quy trình", "Cấu hình"].map((label, index) => <button key={label} className={`nav-item ${index === 0 ? "nav-item-active" : ""}`} type="button">{label}</button>)}</nav></div><div className="flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-800">A</span><div className="hidden text-sm sm:block"><p className="font-medium">Chuyên viên A</p><p className="text-xs text-slate-500">Người dùng giả định</p></div></div></div></header>
+    <main className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6">
+      <section className="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start"><div><div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-medium"><span className="badge badge-blue">{sampleFile.id}</span><span className="badge badge-amber"><span aria-hidden>◷</span> Đang soạn thảo</span><span className="text-slate-500">Cục · Soạn thảo trình Bộ</span></div><h1 className="max-w-4xl text-xl font-bold leading-7 sm:text-2xl">{sampleFile.name}</h1><p className="mt-2 text-sm text-slate-600">Thông tư sửa đổi, bổ sung · {sampleFile.branch} · RuleSet {sampleFile.ruleset}</p></div><Link className="button button-primary shrink-0" href="/ho-so/du-thao-thong-tu-mau/soan-thao">Mở trình soạn thảo <span aria-hidden>→</span></Link></div></section>
+      <section className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Chỉ số hồ sơ">{dashboardStats.map((item) => <div className="card p-4" key={item.label}><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{item.label}</p><div className="mt-2 flex items-end justify-between"><p className="text-2xl font-bold">{item.value}</p><span className="text-xl" aria-hidden>{item.icon}</span></div><p className="mt-1 text-xs text-slate-500">{item.detail}</p></div>)}</section>
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Tiến độ nghiệp vụ</p><h2>Dòng thời gian hồ sơ</h2></div><span className="badge badge-blue">{timeline.length} sự kiện</span></div><ol className="mt-5">{timeline.map(([title, date, detail, current], index) => <li className="relative grid grid-cols-[24px_1fr] gap-3 pb-5 last:pb-0" key={title}>{index < timeline.length - 1 && <span className="absolute left-[11px] top-6 h-full w-px bg-slate-200" />}<span className={`relative z-10 mt-1 h-6 w-6 rounded-full border-4 border-white ${current ? "bg-blue-600" : "bg-slate-300"}`} aria-hidden /><div><div className="flex flex-wrap items-center gap-2"><p className="font-semibold">{title}</p>{current && <span className="badge badge-blue">Đang thực hiện</span>}</div><p className="mt-1 text-sm text-slate-500">{date} · {detail}</p></div></li>)}</ol></section>
+        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Ưu tiên</p><h2>Công việc cần xử lý</h2></div><span className="badge badge-red">{workItems.length} mục</span></div><div className="mt-4 divide-y divide-slate-100">{workItems.map((item) => <div className="flex items-start gap-3 py-3" key={item.title}><StatusIcon type={item.level} /><div className="min-w-0"><p className="font-medium">{item.title}</p><p className="mt-1 text-sm text-slate-500">{item.detail}</p><p className="mt-2 text-xs font-semibold text-slate-600">Phụ trách: {item.assignee} · Hạn: {item.due}</p></div></div>)}</div></section>
+        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Nội dung</p><h2>Phiên bản gần đây</h2></div><span className="badge badge-slate">{recentVersions.length} phiên bản</span></div><div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b border-slate-200 text-xs uppercase text-slate-500"><th className="pb-3">Phiên bản</th><th className="pb-3">Trạng thái</th><th className="pb-3">Lý do tạo</th><th className="pb-3">Thời điểm</th></tr></thead><tbody>{recentVersions.map((version) => <tr className="border-b border-slate-100 last:border-0" key={version.id}><td className="py-3 font-semibold text-blue-800">{version.id}</td><td className="py-3"><span className={`badge ${version.current ? "badge-blue" : "badge-slate"}`}>{version.status}</span></td><td className="py-3 text-slate-600">{version.reason}</td><td className="py-3 text-slate-500">{version.date}</td></tr>)}</tbody></table></div></section>
+        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Cổng kiểm soát</p><h2>Thành phần hồ sơ</h2></div><span className="badge badge-amber">Chưa đạt</span></div><div className="mt-4 space-y-3">{checklist.map((item) => <div className="flex items-start gap-3" key={item.label}><StatusIcon type={item.state === "Đầy đủ" ? "ok" : "warn"} /><div className="flex min-w-0 flex-1 items-start justify-between gap-2"><div><p className="font-medium">{item.label}</p><p className="text-sm text-slate-500">{item.detail}</p></div><span className={`badge shrink-0 ${item.state === "Đầy đủ" ? "badge-blue" : item.state === "Thiếu" ? "badge-red" : "badge-amber"}`}>{item.state}</span></div></div>)}</div><div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950"><strong>Chưa đủ điều kiện chuyển bước.</strong> Hoàn thiện tài liệu còn thiếu và xử lý các ý kiến bắt buộc trước khi trình Bộ.</div></section>
+      </div>
+    </main><div className="desktop-note">Chế độ xem trên màn hình nhỏ. Soạn thảo đầy đủ phù hợp hơn trên máy tính.</div></div>;
 }

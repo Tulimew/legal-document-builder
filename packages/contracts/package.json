@@ -1,0 +1,13 @@
+{
+  "name": "@legal-document-builder/contracts",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas/v1/common.schema.json": "./schemas/v1/common.schema.json",
+    "./schemas/v1/asset.schema.json": "./schemas/v1/asset.schema.json",
+    "./schemas/v1/legal-content.schema.json": "./schemas/v1/legal-content.schema.json",
+    "./schemas/v1/drafting.schema.json": "./schemas/v1/drafting.schema.json"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legal-document-builder.local/contracts/v1/common.schema.json",
+  "title": "Common contract definitions v1",
+  "$defs": {
+    "contractVersion": { "enum": ["1.0", "1.1"] },
+    "entityId": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "isoDateTime": { "type": "string", "format": "date-time" },
+    "revisionNumber": { "type": "integer", "minimum": 0 },
+    "actorRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId"],
+      "properties": {
+        "userId": { "$ref": "#/$defs/entityId" },
+        "personId": { "$ref": "#/$defs/entityId" },
+        "projectMembershipId": { "$ref": "#/$defs/entityId" },
+        "delegationId": { "$ref": "#/$defs/entityId" }
+      }
+    },
+    "versionedConfigRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitionId", "versionId", "versionCode"],
+      "properties": {
+        "definitionId": { "$ref": "#/$defs/entityId" },
+        "versionId": { "$ref": "#/$defs/entityId" },
+        "versionCode": { "type": "string", "minLength": 1 }
+      }
+    },
+    "businessSourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceType", "sourceId"],
+      "properties": {
+        "sourceType": { "type": "string", "minLength": 1 },
+        "sourceId": { "$ref": "#/$defs/entityId" },
+        "sourceVersionId": { "$ref": "#/$defs/entityId" },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legal-document-builder.local/contracts/v1/drafting.schema.json",
+  "title": "Draft lifecycle contracts v1",
+  "$defs": {
+    "draftBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "projectId", "code", "name", "purpose", "status", "createdAt", "createdBy"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "projectId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "code": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "purpose": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["ACTIVE", "CLOSED", "MERGED"] },
+        "forkedFromVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "createdAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "createdBy": { "$ref": "common.schema.json#/$defs/actorRef" },
+        "closedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "closedReason": { "type": "string" }
+      }
+    },
+    "draftWorkspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "projectId", "branchId", "revision", "document", "ruleSet", "updatedAt", "updatedBy"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "projectId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "branchId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "revision": { "$ref": "common.schema.json#/$defs/revisionNumber" },
+        "document": { "$ref": "legal-content.schema.json#/$defs/legalDocumentSnapshot" },
+        "ruleSet": { "$ref": "common.schema.json#/$defs/versionedConfigRef" },
+        "updatedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "updatedBy": { "$ref": "common.schema.json#/$defs/actorRef" }
+      }
+    },
+    "draftCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "workspaceId", "branchId", "sourceRevision", "kind", "document", "createdAt", "createdBy"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "workspaceId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "branchId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "sourceRevision": { "$ref": "common.schema.json#/$defs/revisionNumber" },
+        "kind": { "enum": ["AUTOMATIC", "MANUAL", "PRE_VERSION", "PRE_RESTORE", "PRE_MERGE"] },
+        "label": { "type": "string" },
+        "reason": { "type": "string" },
+        "document": { "$ref": "legal-content.schema.json#/$defs/legalDocumentSnapshot" },
+        "createdAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "createdBy": { "$ref": "common.schema.json#/$defs/actorRef" }
+      }
+    },
+    "draftVersionBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "basisTypeCode", "source", "roleCode", "summary", "recordedAt", "recordedBy"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "basisTypeCode": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "common.schema.json#/$defs/businessSourceRef" },
+        "roleCode": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "note": { "type": "string" },
+        "recordedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "recordedBy": { "$ref": "common.schema.json#/$defs/actorRef" }
+      }
+    },
+    "draftVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "projectId", "branchId", "code", "name", "parentVersionIds", "mergedSourceVersionIds", "document", "ruleSet", "bases", "sealedAt", "sealedBy"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "projectId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "branchId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "code": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "parentVersionIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/entityId" } },
+        "mergedSourceVersionIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.schema.json#/$defs/entityId" } },
+        "sourceCheckpointId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "document": { "$ref": "legal-content.schema.json#/$defs/legalDocumentSnapshot" },
+        "ruleSet": { "$ref": "common.schema.json#/$defs/versionedConfigRef" },
+        "bases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/draftVersionBasis" } },
+        "sealedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "sealedBy": { "$ref": "common.schema.json#/$defs/actorRef" }
+      }
+    },
+    "legalNodeVersionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["draftVersionId", "legalNodeId", "exists", "parentNodeId", "orderKey"],
+      "properties": {
+        "draftVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "legalNodeId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "exists": { "type": "boolean" },
+        "parentNodeId": {
+          "oneOf": [
+            { "$ref": "common.schema.json#/$defs/entityId" },
+            { "type": "null" }
+          ]
+        },
+        "orderKey": { "type": "string" },
+        "displayNumber": { "type": "string" },
+        "node": { "$ref": "legal-content.schema.json#/$defs/legalNode" }
+      }
+    },
+    "draftLegalNodeChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "id", "projectId", "branchId", "legalNodeId", "changeType", "fromVersionId", "effectiveVersionId", "before", "after", "reason", "basisRefs", "proposedBy", "performedBy", "decidedBy", "decidedAt"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "projectId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "branchId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "legalNodeId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "changeType": { "enum": ["DRAFT_ADD", "DRAFT_REMOVE", "DRAFT_RENUMBER", "DRAFT_MOVE", "DRAFT_CONTENT_CHANGE", "DRAFT_MOVE_AND_CONTENT_CHANGE"] },
+        "fromVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "effectiveVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "before": { "$ref": "#/$defs/legalNodeVersionState" },
+        "after": { "$ref": "#/$defs/legalNodeVersionState" },
+        "reason": { "type": "string", "minLength": 1 },
+        "basisRefs": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/businessSourceRef" } },
+        "proposedBy": { "$ref": "common.schema.json#/$defs/actorRef" },
+        "performedBy": { "$ref": "common.schema.json#/$defs/actorRef" },
+        "decidedBy": { "$ref": "common.schema.json#/$defs/actorRef" },
+        "decidedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" }
+      }
+    },
+    "saveWorkspaceCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "workspaceId", "expectedRevision", "document", "actor", "correlationId"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "workspaceId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "expectedRevision": { "$ref": "common.schema.json#/$defs/revisionNumber" },
+        "document": { "$ref": "legal-content.schema.json#/$defs/legalDocumentSnapshot" },
+        "actor": { "$ref": "common.schema.json#/$defs/actorRef" },
+        "correlationId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "saveWorkspaceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "workspaceId", "revision", "synchronizedAt"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "workspaceId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "revision": { "$ref": "common.schema.json#/$defs/revisionNumber" },
+        "synchronizedAt": { "$ref": "common.schema.json#/$defs/isoDateTime" }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/draftBranch" },
+    { "$ref": "#/$defs/draftWorkspace" },
+    { "$ref": "#/$defs/draftCheckpoint" },
+    { "$ref": "#/$defs/draftVersion" },
+    { "$ref": "#/$defs/draftLegalNodeChange" },
+    { "$ref": "#/$defs/saveWorkspaceCommand" },
+    { "$ref": "#/$defs/saveWorkspaceResult" }
+  ]
+}

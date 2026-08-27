@@ -48,6 +48,8 @@ Tên kỹ thuật sau là đề xuất để giao tiếp nhất quán; nhãn ti�
 
 **Cần chuyên gia pháp lý xác nhận:** tập lệnh, cách diễn đạt trong dự thảo, phạm vi áp dụng và trường hợp một thao tác kỹ thuật không tương ứng một-một với một lệnh pháp lý.
 
+`AmendmentOperation` chỉ dùng khi dự thảo đang xây dựng quy định tác động lên văn bản gốc. Việc cùng một `LegalNode` của dự thảo đổi số, đổi thứ tự, chuyển Chương/Mục/Tiểu mục hoặc sửa nội dung qua các `DraftVersion` thuộc lịch sử phát triển dự thảo và không được mô hình hóa bằng bảng thao tác này.
+
 ## 4. Dữ liệu bắt buộc của thao tác
 
 | Dữ liệu | Yêu cầu |
@@ -101,6 +103,8 @@ Nếu một thao tác không áp dụng được, projection phải dừng hoặ
 | Tham chiếu đến nút bị xóa | Tham chiếu nội bộ trỏ tới nút bị `REPEAL`, thay thế hoặc tách | Cảnh báo hoặc lỗi chặn theo RuleSet; yêu cầu cập nhật/giải trình |
 | Dựa trên phiên bản nguồn cũ | Nội dung hoặc dấu vết nút nguồn không khớp mốc mới | Đánh dấu thao tác lỗi thời; phải đối chiếu và xác nhận lại |
 | Hợp nhất nhánh có thao tác mâu thuẫn | Hai nhánh thay đổi cùng đích theo cách không tương thích | Tạo danh sách xung đột; con người quyết định từng mục trước khi tạo `DraftVersion` hợp nhất |
+
+Ý kiến hoặc thao tác cạnh tranh trước hết tạo `ChangeProposal`. Hệ thống nhóm các đề xuất không tương thích vào `ResolutionCase` nhưng giữ nguyên từng nguồn và từng `ResolutionOption`. Người chủ trì có thể chọn A/B, giữ nguyên, tạo phương án kết hợp mới, yêu cầu nghiên cứu thêm, xin ý kiến cấp có thẩm quyền hoặc tạm hoãn. Quyết định được ghi bằng `ResolutionDecision`, bắt buộc có lý do và căn cứ thẩm quyền. Chưa có quyết định thì không tạo hoặc chuyển `LegalChange` sang trạng thái áp dụng và không cập nhật projection như thể phương án đã được chọn.
 
 Giải quyết xung đột phải lưu người thực hiện, người quyết định, phương án chọn, lý do và căn cứ. AI chỉ có thể gợi ý phương án.
 

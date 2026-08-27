@@ -1,0 +1,8 @@
+export type PrototypeMemberOpinion={id:string;memberId:string;memberName:string;position:string;reasoning:string;proposedDraftContent?:string;recordedAt:string};
+export type PrototypeMeetingConclusion={decision:string;selectedOpinionId?:string;reason:string;authorityBasis:string;draftingInstruction?:string;decidedBy:string;decidedAt:string};
+export type PrototypeDeliberation={commentId:string;opinions:PrototypeMemberOpinion[];meetingConclusion?:PrototypeMeetingConclusion};
+const KEY="legal-builder.prototype.deliberations.v1";
+export function loadPrototypeDeliberations():PrototypeDeliberation[]{if(typeof window==="undefined")return[];try{const value=JSON.parse(window.localStorage.getItem(KEY)??"[]");return Array.isArray(value)?value:[]}catch{return[]}}
+export function savePrototypeDeliberations(value:PrototypeDeliberation[]):void{window.localStorage.setItem(KEY,JSON.stringify(value));window.dispatchEvent(new CustomEvent("prototype-deliberations-changed"))}
+export function addMemberOpinion(commentId:string,opinion:PrototypeMemberOpinion):void{const all=loadPrototypeDeliberations();const current=all.find(item=>item.commentId===commentId);const next=current?all.map(item=>item.commentId===commentId?{...item,opinions:[...item.opinions.filter(value=>value.memberId!==opinion.memberId),opinion]}:item):[...all,{commentId,opinions:[opinion]}];savePrototypeDeliberations(next)}
+export function saveMeetingConclusion(commentId:string,meetingConclusion:PrototypeMeetingConclusion):void{const all=loadPrototypeDeliberations();const current=all.find(item=>item.commentId===commentId);const next=current?all.map(item=>item.commentId===commentId?{...item,meetingConclusion}:item):[...all,{commentId,opinions:[],meetingConclusion}];savePrototypeDeliberations(next)}

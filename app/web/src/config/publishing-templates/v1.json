@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0",
+  "templates": {
+    "reviewSynthesis": {
+      "id": "TPL-REVIEW-SYNTHESIS",
+      "version": "1.0.0-prototype",
+      "status": "PROTOTYPE",
+      "filename": "ban-tong-hop-y-kien-tiep-thu-giai-trinh.docx",
+      "title": "BẢN TỔNG HỢP Ý KIẾN, TIẾP THU, GIẢI TRÌNH Ý KIẾN GÓP Ý, PHẢN BIỆN XÃ HỘI ĐỐI VỚI DỰ THẢO",
+      "columns": [3300, 1800, 3600, 3000]
+    },
+    "draftComparison": {
+      "id": "TPL-DRAFT-COMPARISON",
+      "version": "1.0.0-prototype",
+      "status": "PROTOTYPE",
+      "filename": "ban-so-sanh-thuyet-minh-noi-dung-du-thao.docx",
+      "title": "BẢN SO SÁNH, THUYẾT MINH NỘI DUNG DỰ THẢO",
+      "columns": [4200, 5000, 2800]
+    }
+  }
+}

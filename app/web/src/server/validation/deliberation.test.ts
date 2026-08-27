@@ -1,0 +1,3 @@
+import assert from "node:assert/strict";import test from "node:test";import { AppError } from "../errors";import { parseResolutionDecision } from "./deliberation";
+test("kết luận bắt buộc có lý do và căn cứ thẩm quyền",()=>{assert.throws(()=>parseResolutionDecision({contractVersion:"1.1",decisionType:"KEEP_CURRENT",reason:"",authorityBasis:"",correlationId:"test"}),(error:unknown)=>error instanceof AppError&&error.code==="INVALID_REQUEST")});
+test("chọn phương án bắt buộc chỉ rõ option",()=>{assert.throws(()=>parseResolutionDecision({contractVersion:"1.1",decisionType:"SELECT_OPTION",reason:"Lý do",authorityBasis:"Căn cứ",correlationId:"test"}),(error:unknown)=>error instanceof AppError&&error.code==="INVALID_REQUEST")});

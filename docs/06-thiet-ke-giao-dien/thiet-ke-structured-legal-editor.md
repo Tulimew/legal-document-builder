@@ -47,6 +47,18 @@ Nút phát hành phải dùng nhãn phù hợp với quyền và giai đoạn, t
 - Không cho HTML tùy ý hoặc nội dung kết xuất trở thành nguồn dữ liệu chính.
 - Thanh định dạng chỉ cho phép đậm, nghiêng, gạch chân, chỉ số trên, chỉ số dưới, tham chiếu nội bộ và chú thích khi RuleSet cho phép. Không cung cấp lựa chọn font, cỡ chữ, màu, căn lề, thụt lề, khoảng cách hoặc số thứ tự cấu trúc.
 
+Trong chế độ so sánh, mọi thay đổi hiển thị phải truy nguyên được. Giao diện phải phân biệt người trực tiếp chỉnh sửa với người phê duyệt, đồng thời hiển thị lý do và căn cứ phát sinh thay đổi. Không chỉ hiển thị khác biệt ký tự mà thiếu ngữ cảnh nghiệp vụ. Nếu chưa xác định được nguồn thay đổi, giao diện phải cảnh báo rõ **“Chưa xác định căn cứ thay đổi”** và không được khiến người dùng hiểu rằng thay đổi đã đủ điều kiện phê duyệt.
+
+Chế độ So sánh mặc định dùng bố cục toàn văn bản theo hướng **document-first**: văn bản được trình bày liên tục và thay đổi được đánh dấu ngay trong mạch đọc. Không tách toàn bộ văn bản thành danh sách thẻ “nội dung trước/nội dung sau”. Thông tin truy nguyên đầy đủ nằm trong bảng phụ có thể mở, thu gọn, đóng và mở lại. Hover hoặc focus chỉ cung cấp tóm tắt; click, phím Enter hoặc phím cách chọn thay đổi và mở thông tin đầy đủ. Trên thiết bị không có hover, người dùng dùng thao tác nhấn. Không đặt thông tin thiết yếu chỉ trong tooltip. Chế độ “Danh sách thay đổi” có thể được bổ sung như cách xem phụ sau này, nhưng không phải giao diện mặc định.
+
+So sánh xa cho phép chọn hai phiên bản bất kỳ trong cùng hồ sơ. Giao diện phân biệt **Thay đổi ròng**, **Diễn biến qua phiên bản** và **Theo từng bước**. Thanh chọn hiển thị đường phiên bản, các mốc trung gian và cảnh báo khi không có quan hệ tổ tiên-hậu duệ trực tiếp. Với rẽ nhánh/hợp nhất, người dùng chọn đường hoặc xem đường hệ thống xác định cùng nguồn hợp nhất; không tự giả định tuyến tính.
+
+Người dùng chọn thêm **Theo cấu trúc phiên bản mới**, **Theo cấu trúc phiên bản gốc** hoặc **Ánh xạ cấu trúc**. Ánh xạ dựa trên ID ổn định, phân biệt `DRAFT_RENUMBER`, `DRAFT_MOVE`, `DRAFT_CONTENT_CHANGE` và `DRAFT_MOVE_AND_CONTENT_CHANGE`; đây là lịch sử phát triển dự thảo, không phải `AmendmentOperation` đối với văn bản gốc. Bảng ánh xạ hiển thị vị trí đầu-cuối, ID, loại biến động, chỉ báo đổi nội dung, phiên bản phát sinh, lý do và căn cứ; có bộ lọc riêng cho đánh lại số và chuyển vị trí.
+
+Trong cấu trúc phiên bản mới, nội dung đầy đủ chỉ nằm ở vị trí hiện tại; không lặp toàn văn tại vị trí cũ và không trình bày như bãi bỏ–bổ sung. Marker nhẹ ngoài lề ghi số tại phiên bản gốc, có thể ẩn, và mở timeline số/vị trí qua mọi phiên bản trung gian. `DRAFT_MOVE_AND_CONTENT_CHANGE` hiển thị chuyển vị trí trong bảng truy nguyên và `ins`/`del` cho nội dung; hai khía cạnh không bị gộp mơ hồ. `DRAFT_RENUMBER` do RuleSet ghi “Đánh lại số tự động”, không tính là thay đổi nội dung. **Bản hoàn thiện** chỉ giữ vị trí và nội dung cuối, không hiển thị marker hoặc dấu vết vị trí cũ.
+
+Timeline bên phải hiển thị trạng thái của `LegalNode` tại từng mốc, kể cả “Không thay đổi”, nội dung đã xuất hiện rồi bị bãi bỏ và các lần sửa tiếp/khôi phục. Có thể lọc theo phiên bản phát sinh, người sửa, nguồn và trạng thái; checkbox cho phép hiện thay đổi trung gian không còn ở bản cuối. Các thay đổi trung gian chỉ nằm trong bảng lịch sử, không chen vào toàn văn phiên bản cuối.
+
 ### 2.4. Cột phải - Ngữ cảnh và kiểm soát
 
 Cột phải dùng tab hoặc nhóm có thể thu gọn:
@@ -102,6 +114,10 @@ Chuyển chế độ không tạo bản sao nội dung. Mọi chế độ đọc
 
 Không phải mỗi lần tự động lưu hoặc checkpoint đều tạo phiên bản.
 
+Giao diện tạo phiên bản hiển thị danh sách phiên bản đã có và biểu mẫu chốt mốc mới. Mã mới được đề xuất tuần tự, chỉ đọc và không tái sử dụng. Người dùng chọn phiên bản nguồn, nhánh, một hoặc nhiều căn cứ tạo phiên bản, xem tập thay đổi được đưa vào, thay đổi chờ duyệt, lỗi chặn/cảnh báo và xác nhận tạo checkpoint. Tên phiên bản được đề xuất từ căn cứ; người dùng chỉ bổ sung mô tả.
+
+Căn cứ có thể phát sinh từ chỉ đạo các cấp, thông báo kết luận, họp Tổ soạn thảo, lấy ý kiến, thẩm định, rà soát, hợp nhất, khôi phục checkpoint hoặc loại khác. Biểu mẫu thay đổi trường theo loại căn cứ và có thể chọn `SourceDocument` đã có hoặc minh họa tải tệp. Tệp chưa được lưu phải ghi rõ **“Chưa lưu tệp lên hệ thống”**; việc chọn tệp không được báo như đã tải lên khi chưa có máy chủ xác nhận.
+
 ### 4.4. Cộng tác và khóa mềm
 
 - Phiên bản 1 cho phép nhiều người xem đồng thời.
@@ -129,6 +145,11 @@ Người soạn tạo nội dung/đề xuất; Tổ trưởng hoặc đầu mố
 - Bàn phím hỗ trợ thêm nút cùng cấp/con, điều hướng, mở tìm kiếm và thao tác biên tập.
 - Khi RuleSet quản lý số Điều/Khoản/Điểm, người dùng không nhập số trực tiếp; có thể yêu cầu khóa số nếu quy tắc cho phép.
 - Dán nội dung được làm sạch; định dạng không hỗ trợ phải được báo trước khi áp dụng.
+- Nhãn nghiệp vụ, trạng thái phê duyệt và cảnh báo không được chen vào câu chữ pháp lý. Chúng được đặt bằng marker ở lề nút, không che chữ hoặc làm đổi độ rộng dòng; hover/focus cho tóm tắt và click mở bảng truy nguyên. Có điều khiển bật/tắt marker; chế độ Bản hoàn thiện mặc định ẩn marker. Nội dung thêm/xóa tiếp tục dùng `ins`/`del` có ngữ nghĩa và không dựa riêng vào màu.
+
+### 5.1. Vấn đề cần quyết định
+
+Tab Ý kiến hoặc mục chuyên biệt hiển thị số `ResolutionCase` đang chờ, các ý kiến nguồn và phương án A/B tách biệt. Chọn phương án làm nổi nội dung xem trước nhưng không áp dụng vào workspace. Nếu chọn kết hợp, giao diện tạo phương án C mới và giữ A/B. Trước xác nhận phải nhập lý do, căn cứ thẩm quyền và yêu cầu chỉnh lý nếu có; kết quả ở nguyên mẫu chỉ là thông báo mô phỏng, không tạo `LegalChange` hoặc ghi dữ liệu máy chủ.
 
 ## 6. Vai trò và phạm vi quyền
 
@@ -243,7 +264,7 @@ Thực hiện luồng tại mục 4.3. Phiên bản mới ghi nhánh, mốc cha/
 - Ma trận quyền chi tiết trong tài liệu IAM, gồm phân tách trách nhiệm và ủy quyền.
 - Giá trị thời gian chờ tự động lưu, chu kỳ checkpoint và thời hạn khóa mềm.
 - Danh mục phím tắt và tiêu chuẩn khả năng tiếp cận sau khi kiểm chứng ở thiết kế giao diện chi tiết.
-- Mức chi tiết của so sánh nội dung và thay đổi cấu trúc.
+- Quy tắc trình bày chi tiết khác biệt nội dung và thay đổi cấu trúc theo từng loại `LegalNode`, sau khi có mẫu nghiệp vụ được xác nhận.
 - Thu thập, kiểm chứng và thiết kế mẫu trình bày truyền thống, DOCX/PDF trong giai đoạn thiết kế xuất bản.
 - Thuật ngữ/nút giao diện chính thức bằng tiếng Việt cho từng loại văn bản.
 - RuleSet và các hành vi giao diện riêng cho Nghị định sau phiên bản 1.

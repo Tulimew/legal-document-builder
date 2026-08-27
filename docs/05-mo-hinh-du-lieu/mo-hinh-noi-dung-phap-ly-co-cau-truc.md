@@ -48,6 +48,12 @@ Một văn bản có thể có nhiều quan hệ tác động, nhưng từng qua
 
 `LegalNode` là đơn vị cấu trúc có mã định danh ổn định. Mã này không phụ thuộc số hiển thị, vị trí hiện tại hoặc tiêu đề. Di chuyển hoặc đánh lại số không làm đổi ID.
 
+Trạng thái của cùng nút tại mỗi `DraftVersion` được lưu bằng dữ liệu cấu trúc, gồm nội dung, số/tên hiển thị, cha và trạng thái tồn tại. Chênh lệch ròng được tính từ hai trạng thái đầu-cuối; diễn biến đầy đủ lấy từ chuỗi `LegalChange` giữa các phiên bản trên đường so sánh đã chọn. Không lưu HTML diff làm nguồn dữ liệu.
+
+So sánh trạng thái phải ánh xạ bằng ID ổn định rồi mới đối chiếu số hiển thị, ID cha và thứ tự. Biến động giữa các `DraftVersion` dùng `DRAFT_RENUMBER`, `DRAFT_MOVE`, `DRAFT_CONTENT_CHANGE` và `DRAFT_MOVE_AND_CONTENT_CHANGE`. Đổi số hoặc vị trí của cùng ID không phải bãi bỏ rồi bổ sung. Với loại kết hợp, phần chuyển vị trí và phần nội dung là hai khía cạnh có truy nguyên riêng; nội dung thêm/bỏ vẫn được tính từ trạng thái của cùng nút.
+
+Nội dung từng tồn tại ở phiên bản trung gian nhưng không còn ở phiên bản cuối vẫn phải truy nguyên được. Không xóa thay đổi đã bị sửa tiếp, đảo ngược hoặc bãi bỏ; mỗi thay đổi ghi phiên bản bắt đầu áp dụng và người thực hiện riêng với người tạo `DraftVersion`.
+
 ### 3.1. Nhóm loại nút và phạm vi phiên bản 1
 
 | Nhóm | Loại nút phiên bản 1 | Mục đích |

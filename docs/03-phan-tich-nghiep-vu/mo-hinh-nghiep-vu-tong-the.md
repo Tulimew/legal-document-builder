@@ -34,6 +34,8 @@ Mỗi nhánh có một trạng thái biên tập đang hoạt động (`DraftWor
 
 Phiên bản dự thảo (`DraftVersion`) là mốc nội dung bất biến có định danh, được người dùng tạo chính thức từ `DraftWorkspace` hoặc từ việc hợp nhất các phiên bản thuộc những nhánh khác nhau. Phiên bản ghi rõ nhánh sở hữu, phiên bản cha hoặc các phiên bản nguồn hợp nhất, người chốt, thời điểm, lý do và tập thay đổi pháp lý.
 
+Mỗi phiên bản có một hoặc nhiều liên kết căn cứ tạo phiên bản (`DraftVersionBasis`). Liên kết ghi loại căn cứ, nguồn nghiệp vụ hoặc `SourceDocument`, vai trò của căn cứ và ghi chú tại thời điểm chốt; không đồng nhất với `LegalBasis`, vốn quản lý căn cứ pháp lý theo nguồn và hiệu lực. Mã phiên bản được cấp tuần tự trong phạm vi cấu hình, không được sửa hoặc tái sử dụng sau khi đã cấp.
+
 Bước quy trình và phiên bản dự thảo là hai trục độc lập: một dự thảo có thể đi qua nhiều đợt/bước; một bước có thể tham chiếu nhiều dự thảo hoặc không tạo dự thảo nào.
 
 ```mermaid
@@ -128,6 +130,22 @@ Một gói phát hành có thể chứa nhiều phiên bản từ các nhánh kh
 Mọi thay đổi nội dung phải liên kết được tới ít nhất một căn cứ phát sinh hợp lệ: ý kiến góp ý, kết luận cuộc họp, thông báo kết luận, văn bản chỉ đạo, nhiệm vụ chỉ đạo, kết quả thẩm định, quyết định của Tổ soạn thảo hoặc quyết định/phê duyệt có thẩm quyền.
 
 Mỗi liên kết truy nguyên cần nêu phần nội dung bị tác động, loại thay đổi, lý do, người đề xuất, người quyết định, thời điểm và kết quả. Trạng thái “không tiếp thu” cũng phải có giải trình và người chịu trách nhiệm.
+
+### 6.1. Đề xuất và giải quyết ý kiến cạnh tranh
+
+Nội dung chỉnh lý chưa được duyệt được quản lý dưới dạng `ChangeProposal`, không phải `LegalChange` đang áp dụng. Khi nhiều ý kiến đưa ra phương án không tương thích cho cùng một nội dung, hệ thống mở `ResolutionCase`, giữ riêng từng `ResolutionOption` cùng ý kiến và căn cứ ủng hộ, không ghi đè phương án nào.
+
+Người có thẩm quyền ghi `ResolutionDecision` để chọn một phương án, giữ nguyên, kết hợp thành phương án mới, hoãn, yêu cầu nghiên cứu thêm hoặc xin ý kiến cấp có thẩm quyền. Phương án kết hợp là đối tượng mới và truy nguyên các phương án nguồn. Quyết định phải có lý do, căn cứ thẩm quyền và yêu cầu chỉnh lý nếu có. Chỉ sau quyết định phù hợp, đề xuất được duyệt mới có thể tạo hoặc chuyển `LegalChange` sang trạng thái áp dụng; hệ thống và AI không tự lựa chọn.
+
+### 6.2. So sánh xa và lịch sử nút nội dung
+
+Cho phép so sánh bất kỳ hai `DraftVersion` trong cùng hồ sơ. Chênh lệch ròng được tính từ trạng thái của cùng `LegalNode` tại phiên bản đầu và cuối; diễn biến được lấy từ chuỗi `LegalChange` trên đường phiên bản đã chọn. ID của `LegalNode` ổn định qua các phiên bản, kể cả khi số hiển thị thay đổi.
+
+Không tự coi lịch sử là tuyến tính. Đường so sánh phải được chứng minh bằng quan hệ cha-con; khi rẽ nhánh hoặc hợp nhất phải ghi đường được chọn và các nhánh nguồn. Nội dung từng xuất hiện ở phiên bản trung gian nhưng bị sửa tiếp, đảo ngược hoặc bãi bỏ vẫn được giữ trong lịch sử. Mỗi thay đổi ghi phiên bản bắt đầu áp dụng; người tạo phiên bản không mặc nhiên là người thực hiện thay đổi.
+
+Ánh xạ đầu-cuối dùng ID ổn định của `LegalNode`, không dùng số hiển thị. Biến động trong quá trình phát triển dự thảo được phân biệt thành `DRAFT_RENUMBER`, `DRAFT_MOVE`, `DRAFT_CONTENT_CHANGE` và `DRAFT_MOVE_AND_CONTENT_CHANGE`. Đổi số hoặc chuyển vị trí giữ cùng ID, không được biến thành một cặp bãi bỏ–bổ sung; diễn biến trung gian của số hiển thị, cha, thứ tự và nội dung vẫn nằm trên cùng lịch sử nút.
+
+Lớp này khác `AmendmentOperation`: biến động giữa các `DraftVersion` mô tả cách chính dự thảo đang được phát triển; `AmendmentOperation` chỉ mô tả quy định mà dự thảo đang xây dựng nhằm sửa đổi, bổ sung, thay thế hoặc bãi bỏ một văn bản gốc. Không dùng `AmendmentOperation` để biểu diễn cùng một Điều của DT-001 được đánh lại số hoặc chuyển vị trí ở DT-006.
 
 ## 7. Các loại sự kiện nghiệp vụ
 

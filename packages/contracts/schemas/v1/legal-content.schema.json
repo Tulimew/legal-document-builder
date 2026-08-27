@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legal-document-builder.local/contracts/v1/legal-content.schema.json",
+  "title": "Structured legal content contract v1",
+  "$defs": {
+    "internalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "targetNodeId", "referenceType"],
+      "properties": {
+        "kind": { "const": "INTERNAL_REFERENCE" },
+        "targetNodeId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "referenceType": { "type": "string", "minLength": 1 }
+      }
+    },
+    "externalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "sourceDocumentId", "verificationStatus"],
+      "properties": {
+        "kind": { "const": "EXTERNAL_REFERENCE" },
+        "sourceDocumentId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "locator": { "type": "string" },
+        "verificationStatus": { "type": "string", "minLength": 1 }
+      }
+    },
+    "inlineSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": { "type": "string" },
+        "marks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["BOLD", "ITALIC", "UNDERLINE", "SUPERSCRIPT", "SUBSCRIPT"]
+          }
+        },
+        "reference": {
+          "oneOf": [
+            { "$ref": "#/$defs/internalReference" },
+            { "$ref": "#/$defs/externalReference" }
+          ]
+        },
+        "footnoteId": { "$ref": "common.schema.json#/$defs/entityId" }
+      }
+    },
+    "paragraphBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "spans"],
+      "properties": {
+        "kind": { "const": "PARAGRAPH" },
+        "spans": { "type": "array", "items": { "$ref": "#/$defs/inlineSpan" } }
+      }
+    },
+    "listItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "blocks"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "blocks": { "type": "array", "items": { "$ref": "#/$defs/paragraphBlock" } }
+      }
+    },
+    "listBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "styleCode", "items"],
+      "properties": {
+        "kind": { "const": "LIST" },
+        "styleCode": { "type": "string", "minLength": 1 },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/listItem" } }
+      }
+    },
+    "tableCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "blocks"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "rowSpan": { "type": "integer", "minimum": 1 },
+        "columnSpan": { "type": "integer", "minimum": 1 },
+        "blocks": { "type": "array", "items": { "$ref": "#/$defs/paragraphBlock" } }
+      }
+    },
+    "tableRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "cells"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "cells": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/tableCell" } }
+      }
+    },
+    "tableBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "rows"],
+      "properties": {
+        "kind": { "const": "TABLE" },
+        "tableId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "caption": { "type": "array", "items": { "$ref": "#/$defs/paragraphBlock" } },
+        "source": { "$ref": "common.schema.json#/$defs/businessSourceRef" },
+        "verificationStatus": { "type": "string", "minLength": 1 },
+        "metadata": { "type": "object" },
+        "rows": { "type": "array", "items": { "$ref": "#/$defs/tableRow" } }
+      }
+    },
+    "figureBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "figureId", "asset", "alternativeText", "verificationStatus", "displayRoleCode", "metadata"],
+      "properties": {
+        "kind": { "const": "FIGURE" },
+        "figureId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "asset": { "$ref": "asset.schema.json#/$defs/assetRef" },
+        "alternativeText": { "type": "string", "minLength": 1 },
+        "caption": { "type": "array", "items": { "$ref": "#/$defs/paragraphBlock" } },
+        "source": { "$ref": "common.schema.json#/$defs/businessSourceRef" },
+        "verificationStatus": { "type": "string", "minLength": 1 },
+        "displayRoleCode": { "type": "string", "minLength": 1 },
+        "metadata": { "type": "object" }
+      }
+    },
+    "legalContentBlock": {
+      "oneOf": [
+        { "$ref": "#/$defs/paragraphBlock" },
+        { "$ref": "#/$defs/listBlock" },
+        { "$ref": "#/$defs/tableBlock" },
+        { "$ref": "#/$defs/figureBlock" }
+      ]
+    },
+    "legalNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nodeTypeCode", "parentNodeId", "orderKey", "content", "metadata", "lifecycleStatus"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/entityId" },
+        "nodeTypeCode": { "type": "string", "minLength": 1 },
+        "parentNodeId": {
+          "oneOf": [
+            { "$ref": "common.schema.json#/$defs/entityId" },
+            { "type": "null" }
+          ]
+        },
+        "orderKey": { "type": "string", "minLength": 1 },
+        "title": { "type": "string" },
+        "content": { "type": "array", "items": { "$ref": "#/$defs/legalContentBlock" } },
+        "metadata": { "type": "object" },
+        "displayNumber": { "type": "string" },
+        "displayNumberLocked": { "type": "boolean" },
+        "lifecycleStatus": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sourceRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relationType", "sourceDocumentId", "verificationStatus"],
+      "properties": {
+        "relationType": {
+          "enum": ["NEW_DOCUMENT", "AMENDING_DOCUMENT", "REPLACING_DOCUMENT", "REPEALING_DOCUMENT", "OTHER_CONFIGURED_RELATION"]
+        },
+        "sourceDocumentId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "sourceVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "verificationStatus": { "type": "string", "minLength": 1 }
+      }
+    },
+    "legalDocumentSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "legalDocumentId", "documentTypeCode", "relationType", "metadata", "ruleSet", "nodes", "sourceRelations"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "legalDocumentId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "documentTypeCode": { "type": "string", "minLength": 1 },
+        "relationType": {
+          "enum": ["NEW_DOCUMENT", "AMENDING_DOCUMENT", "REPLACING_DOCUMENT", "REPEALING_DOCUMENT", "OTHER_CONFIGURED_RELATION"]
+        },
+        "metadata": { "type": "object" },
+        "ruleSet": { "$ref": "common.schema.json#/$defs/versionedConfigRef" },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/legalNode" } },
+        "sourceRelations": { "type": "array", "items": { "$ref": "#/$defs/sourceRelation" } }
+      }
+    }
+  },
+  "$ref": "#/$defs/legalDocumentSnapshot"
+}

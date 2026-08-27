@@ -8,7 +8,7 @@ Xây dựng ứng dụng web chạy trên NAS, hỗ trợ xây dựng văn bản
 
 ## Phạm vi ban đầu
 
-Giai đoạn hiện tại tập trung xác định phạm vi sản phẩm, rà soát căn cứ pháp lý, phân tích nghiệp vụ, thiết kế quy trình, mô hình dữ liệu, giao diện, phương án tích hợp AI, kiểm thử và triển khai trên NAS. Chưa xây dựng mã nguồn ứng dụng, cơ sở dữ liệu hoặc hạ tầng triển khai.
+Giai đoạn hiện tại đang hoàn thiện nền tảng kỹ thuật sau nguyên mẫu giao diện M1. Repository đã có ứng dụng Next.js dùng dữ liệu giả, hợp đồng dữ liệu, migration PostgreSQL, API nền và IAM/phân quyền nền; migration chưa được chạy trên môi trường database thật và chưa tích hợp nhà cung cấp định danh, AI thật hoặc hạ tầng triển khai NAS.
 
 ## Nguyên tắc kiến trúc
 
@@ -31,7 +31,11 @@ Giai đoạn hiện tại tập trung xác định phạm vi sản phẩm, rà s
 - `docs/07-tich-hop-ai/`: phạm vi, nguyên tắc an toàn và phương án tích hợp AI.
 - `docs/08-kiem-thu/`: chiến lược, kịch bản và kết quả kiểm thử.
 - `docs/09-trien-khai-nas/`: kiến trúc vận hành và quy trình triển khai NAS.
+- `docs/10-kien-truc-ky-thuat/`: kiến trúc tổng thể, ranh giới mô-đun và quyết định kỹ thuật.
+
+Hợp đồng dữ liệu dùng chung được đặt tại `packages/contracts/`; đây là schema trao đổi, không phải schema CSDL vật lý.
+Migration PostgreSQL được đặt tại `packages/database/`; chỉ chạy sau khi kiểm thử trên môi trường database tách biệt, không chạy trực tiếp trên NAS đang vận hành.
 
 ## Trạng thái hiện tại
 
-Đang phân tích và thiết kế nghiệp vụ, chưa lập trình.
+Đã có M1 - Nguyên mẫu giao diện và đang triển khai nền tảng cho M2. Mã giao diện hiện tại vẫn dùng dữ liệu giả; migration P0-04 mới là schema nguồn, chưa tạo thành ứng dụng nghiệp vụ có dữ liệu lưu bền vững.

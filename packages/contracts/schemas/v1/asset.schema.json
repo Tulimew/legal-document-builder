@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://legal-document-builder.local/contracts/v1/asset.schema.json",
+  "title": "Versioned asset contracts v1.1",
+  "$defs": {
+    "assetChecksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "value"],
+      "properties": {
+        "algorithm": { "const": "SHA-256" },
+        "value": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" }
+      }
+    },
+    "assetRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assetId", "assetVersionId", "mediaType", "byteSize", "checksum"],
+      "properties": {
+        "assetId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "assetVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "byteSize": { "type": "integer", "minimum": 0 },
+        "checksum": { "$ref": "#/$defs/assetChecksum" }
+      }
+    },
+    "assetDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractVersion", "assetId", "assetVersionId", "mediaType", "byteSize", "checksum", "originalFileName", "verificationStatus", "metadata", "createdAt", "createdBy"],
+      "properties": {
+        "contractVersion": { "$ref": "common.schema.json#/$defs/contractVersion" },
+        "assetId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "assetVersionId": { "$ref": "common.schema.json#/$defs/entityId" },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "byteSize": { "type": "integer", "minimum": 0 },
+        "checksum": { "$ref": "#/$defs/assetChecksum" },
+        "originalFileName": { "type": "string", "minLength": 1 },
+        "verificationStatus": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "common.schema.json#/$defs/businessSourceRef" },
+        "metadata": { "type": "object" },
+        "createdAt": { "$ref": "common.schema.json#/$defs/isoDateTime" },
+        "createdBy": { "$ref": "common.schema.json#/$defs/actorRef" }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/assetRef" },
+    { "$ref": "#/$defs/assetDescriptor" }
+  ]
+}

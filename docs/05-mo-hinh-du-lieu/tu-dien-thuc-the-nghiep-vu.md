@@ -175,6 +175,48 @@ Chi tiết quản lý định danh và truy cập (IAM), xác thực, cơ chế 
 - **Quan hệ:** Sinh từ `DraftVersion`, `SupportingDocument` hoặc dữ liệu hồ sơ; được đưa vào gói qua `ReleasePackageItem`.
 - **Bất biến:** Không trở thành nguồn nội dung độc lập; bản trong gói đã phát hành không bị thay thế; phải truy được về dữ liệu cấu trúc và mẫu nguồn.
 
+### 4.10. DraftVersionBasis - Căn cứ tạo phiên bản dự thảo
+
+- **Mục đích:** Ghi một hoặc nhiều căn cứ nghiệp vụ giải thích vì sao `DraftVersion` được chốt.
+- **Dữ liệu chính:** Loại căn cứ, nguồn tham chiếu, vai trò căn cứ, nội dung tóm tắt, người ghi nhận, thời điểm và ghi chú.
+- **Quan hệ:** Thuộc một `DraftVersion`; có thể tham chiếu `Comment`, `DirectionDocument`, `Meeting`, `Consultation`, kết quả thẩm định, `DraftCheckpoint`, phiên bản nguồn hợp nhất hoặc `SourceDocument`.
+- **Bất biến:** Liên kết đã chốt cùng phiên bản là bất biến; không dùng thực thể này thay thế `LegalBasis` về nguồn và hiệu lực pháp lý.
+
+### 4.11. SourceDocument - Tài liệu nguồn hoặc tài liệu làm căn cứ
+
+- **Mục đích:** Quản lý tệp/tài liệu được dùng làm nguồn nội dung hoặc chứng cứ nghiệp vụ trong hồ sơ.
+- **Dữ liệu chính:** Loại tài liệu, tên, số/ký hiệu nếu có, ngày, nguồn thu thập, phiên bản tệp, checksum, trạng thái kiểm chứng, người nhập và người kiểm chứng.
+- **Quan hệ:** Thuộc `LegalDocumentProject`; có thể được tham chiếu bởi `DraftVersionBasis`, `ChangeProposal`, `ResolutionOption`, `LegalChange` hoặc sự kiện nghiệp vụ; có thể liên hệ `SupportingDocument` khi đưa vào gói.
+- **Bất biến:** Thay tệp hoặc nhập lại tạo phiên bản nguồn mới, không ghi đè; tệp chưa kiểm chứng không được dùng làm nguồn sửa đổi chính thức; dữ liệu nhạy cảm không đưa vào Git.
+
+### 4.12. ChangeProposal - Đề xuất thay đổi
+
+- **Mục đích:** Giữ nội dung đề xuất chỉnh lý trước khi được người có quyền phê duyệt.
+- **Dữ liệu chính:** Nút đích, nội dung trước/sau đề xuất, người đề xuất, lý do, nguồn, trạng thái xem xét và ảnh hưởng dự kiến.
+- **Quan hệ:** Phát sinh từ `Comment`, `CommentResolution`, chỉ đạo, họp hoặc rà soát; có thể trở thành `ResolutionOption`; sau phê duyệt có thể tạo `LegalChange`.
+- **Bất biến:** Đề xuất chưa duyệt không được coi là thay đổi đang áp dụng và không tự sửa `DraftWorkspace`; mỗi lần sửa đề xuất phải giữ dấu vết.
+
+### 4.13. LegalNodeVersionState - Trạng thái nút tại phiên bản
+
+- **Mục đích:** Ghi trạng thái nội dung và vị trí hiển thị của một `LegalNode` tại một `DraftVersion` để so sánh đầu-cuối.
+- **Dữ liệu chính:** ID nút ổn định, phiên bản, nội dung cấu trúc, số/tên hiển thị, quan hệ cha-con và trạng thái tồn tại.
+- **Quan hệ:** Thuộc một `DraftVersion`; tham chiếu cùng `LegalNode`; là đầu hoặc cuối của `LegalChange`.
+- **Bất biến:** Đổi số không đổi ID nút; trạng thái của phiên bản bất biến không bị ghi đè; không lưu HTML diff làm nguồn.
+
+### 4.14. DraftVersionPath - Đường phiên bản dùng để so sánh
+
+- **Mục đích:** Ghi chuỗi phiên bản và nhánh được chọn khi so sánh xa.
+- **Dữ liệu chính:** Phiên bản đầu/cuối, các mốc trung gian, nhánh, quan hệ cha-con, điểm rẽ/hợp nhất và cách chọn đường.
+- **Quan hệ:** Tham chiếu các `DraftVersion`, `DraftBranch` và nguồn hợp nhất.
+- **Bất biến:** Chỉ gồm các quan hệ đã được chứng minh; không suy diễn tuyến tính; nếu có nhiều đường hợp lệ phải lưu lựa chọn hoặc yêu cầu người dùng chọn.
+
+### 4.15. DraftLegalNodeChange - Thay đổi nút giữa các phiên bản dự thảo
+
+- **Mục đích:** Ghi nhận biến động của cùng một `LegalNode` trong quá trình phát triển dự thảo, tách biệt với thao tác dự kiến tác động lên văn bản gốc.
+- **Dữ liệu chính:** ID nút ổn định; vị trí, cha, thứ tự và số hiển thị trước/sau; loại `DRAFT_RENUMBER`, `DRAFT_MOVE`, `DRAFT_CONTENT_CHANGE` hoặc `DRAFT_MOVE_AND_CONTENT_CHANGE`; phiên bản phát sinh; lý do; căn cứ; người thực hiện và phê duyệt; chỉ báo nội dung có thay đổi.
+- **Quan hệ:** Liên kết hai `LegalNodeVersionState`, `LegalChange`, `DraftVersionPath`, căn cứ và `AuditEvent`.
+- **Bất biến:** Không ghép nút bằng số hiển thị; đổi số/di chuyển giữ nguyên ID và không được lưu như bãi bỏ cộng bổ sung; loại kết hợp giữ riêng dấu vết cấu trúc và nội dung; không dùng thực thể này thay cho `AmendmentOperation`.
+
 ## 5. Nhóm lấy ý kiến và tiếp thu
 
 ### 5.1. Consultation - Đợt lấy ý kiến
@@ -204,6 +246,27 @@ Chi tiết quản lý định danh và truy cập (IAM), xác thực, cơ chế 
 - **Dữ liệu chính:** Chủ đề, thời gian, địa điểm/kênh, thành phần, tài liệu đầu vào, nội dung chính, kết luận, người xác nhận.
 - **Quan hệ:** Thuộc `ReviewRound`; tạo `Comment`, `DirectionTask` hoặc căn cứ cho `LegalChange`; có thể gắn `DirectionDocument`.
 - **Bất biến:** Kết luận chỉ có hiệu lực nghiệp vụ sau khi được người có thẩm quyền xác nhận theo quy định của cơ quan.
+
+### 5.5. ResolutionCase - Vấn đề cần quyết định
+
+- **Mục đích:** Quản lý một nội dung có các ý kiến hoặc đề xuất cạnh tranh cần người có thẩm quyền lựa chọn.
+- **Dữ liệu chính:** Mã, vị trí nội dung, nội dung hiện tại, mô tả xung đột, người chủ trì, hạn xử lý và trạng thái.
+- **Quan hệ:** Liên kết nhiều `Comment`, `ChangeProposal`, `ResolutionOption`; có lịch sử quyết định qua `ResolutionDecision`.
+- **Bất biến:** Không hợp nhất hoặc loại bỏ ý kiến nguồn khi chưa có quyết định; vụ việc đã có lịch sử không bị xóa.
+
+### 5.6. ResolutionOption - Phương án xử lý
+
+- **Mục đích:** Giữ riêng từng phương án cạnh tranh hoặc phương án kết hợp cho một vấn đề.
+- **Dữ liệu chính:** Mã phương án, nội dung đề xuất, bên ủng hộ, căn cứ, ý kiến Tổ soạn thảo, bản xem trước và ảnh hưởng dự kiến.
+- **Quan hệ:** Thuộc `ResolutionCase`; liên kết `ChangeProposal`, `Comment`, `SourceDocument`; phương án kết hợp truy nguyên các phương án nguồn.
+- **Bất biến:** Tạo phương án C không ghi đè A hoặc B; phương án đã được đưa ra quyết định không bị sửa tại chỗ.
+
+### 5.7. ResolutionDecision - Quyết định xử lý vấn đề
+
+- **Mục đích:** Ghi lựa chọn của người có thẩm quyền đối với các phương án cạnh tranh.
+- **Dữ liệu chính:** Loại quyết định, phương án được chọn, người quyết định, lý do, căn cứ thẩm quyền, yêu cầu chỉnh lý, thời điểm và trạng thái.
+- **Quan hệ:** Thuộc `ResolutionCase`; tham chiếu không, một hoặc nhiều `ResolutionOption`; có thể phê duyệt `ChangeProposal` để tạo `LegalChange` và liên kết `Approval` khi phù hợp.
+- **Bất biến:** Không có quyết định hợp lệ nếu thiếu lý do hoặc căn cứ thẩm quyền; hệ thống/AI không tự quyết; sửa quyết định đã chốt phải tạo quyết định thay thế và giữ lịch sử.
 
 ## 6. Nhóm chỉ đạo, trình và phê duyệt
 
