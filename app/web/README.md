@@ -18,6 +18,8 @@ npm run dev
 
 Mở `http://localhost:3000`. Kiểm tra bằng `npm run lint` và `npm run build`.
 
+Sau khi chạy migration trên database có hậu tố `_dev`, seed dữ liệu giả định bằng cách đặt `ALLOW_DEVELOPMENT_SEED=true` trong đúng phiên PowerShell rồi chạy `npm.cmd run db:seed:development`. Script từ chối database không có hậu tố `_dev`, dùng UUID cố định để chạy lặp an toàn và tự cập nhật hai định danh công khai trong `.env.local`.
+
 Nguyên mẫu giao diện chưa nối CSDL thật. Repository đã có API và IAM/phân quyền nền nhưng chưa chạy migration PostgreSQL hoặc tích hợp nhà cung cấp định danh; AI và lưu trữ server cũng chưa được cấu hình.
 
 Màn hình nhập phiếu góp ý: `http://localhost:3000/ho-so/du-thao-thong-tu-mau/gop-y`; màn hình tổng hợp và xử lý: `http://localhost:3000/ho-so/du-thao-thong-tu-mau/gop-y/tong-hop`. Các màn hình vẫn dùng trạng thái cục bộ; API `/api/v1/projects/{projectId}/comments` chỉ hoạt động sau khi cấu hình PostgreSQL và adapter danh tính phát triển.

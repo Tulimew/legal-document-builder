@@ -38,4 +38,4 @@ Migration PostgreSQL được đặt tại `packages/database/`; chỉ chạy sa
 
 ## Trạng thái hiện tại
 
-Đã có M1 - Nguyên mẫu giao diện và đang triển khai nền tảng cho M2. Mã giao diện hiện tại vẫn dùng dữ liệu giả; migration P0-04 mới là schema nguồn, chưa tạo thành ứng dụng nghiệp vụ có dữ liệu lưu bền vững.
+Đã nghiệm thu mốc M2 trong môi trường development: PostgreSQL đã áp dụng migration `0001`–`0008`, seed hoàn toàn giả định đã tạo IAM/hồ sơ/workflow và smoke test xác nhận lần thực hiện bước vẫn tồn tại sau khi khởi động lại ứng dụng. Các module ngoài workflow vẫn có phần giao diện nguyên mẫu; M2 development không đồng nghĩa đã sẵn sàng triển khai production hoặc NAS.
