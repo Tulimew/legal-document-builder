@@ -9,6 +9,7 @@ Lưu kiến trúc tổng thể, ranh giới mô-đun, luồng dữ liệu, yêu 
 - [Quản lý góp ý và tiếp thu](quan-ly-gop-y-va-tiep-thu.md)
 - [IAM và phân quyền](iam-va-phan-quyen.md)
 - [Thảo luận và kết luận phương án](thao-luan-va-ket-luan-phuong-an.md)
+- [Workflow và đợt xử lý](workflow-va-dot-xu-ly.md)
 - [ADR-0001: Modular monolith TypeScript](adr/0001-modular-monolith-typescript.md)
 
 Tài liệu trong thư mục này không xác lập quy định pháp luật. Các cấu hình workflow, RuleSet, mẫu biểu và căn cứ pháp lý chỉ được đưa vào sử dụng sau khi được chủ thể có thẩm quyền kiểm chứng và phê duyệt theo tài liệu nghiệp vụ.

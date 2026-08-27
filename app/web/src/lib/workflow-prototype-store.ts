@@ -1,0 +1,6 @@
+export type PrototypeStageInstance={id:string;stageCode:string;stageName:string;sequence:number;status:"Đang thực hiện"|"Đã hoàn thành";gate:"Chờ kiểm tra"|"Đạt";draftVersion:string;startedAt:string};
+const KEY="legal-builder.prototype.workflow-instances.v1";
+export const stageDefinitions=[{code:"DRAFT",name:"Soạn thảo và chỉnh lý"},{code:"CONSULT",name:"Lấy và xử lý ý kiến"},{code:"APPRAISE",name:"Thẩm định"},{code:"SUBMIT",name:"Hoàn thiện hồ sơ trình"}];
+export const initialInstances:PrototypeStageInstance[]=[{id:"WF-001",stageCode:"DRAFT",stageName:"Soạn thảo và chỉnh lý",sequence:1,status:"Đã hoàn thành",gate:"Đạt",draftVersion:"DT-003",startedAt:"18/08/2026"},{id:"WF-002",stageCode:"CONSULT",stageName:"Lấy và xử lý ý kiến",sequence:1,status:"Đang thực hiện",gate:"Chờ kiểm tra",draftVersion:"DT-006",startedAt:"30/08/2026"}];
+export function loadWorkflowInstances(){if(typeof window==="undefined")return initialInstances;try{const value=JSON.parse(localStorage.getItem(KEY)??"null");return Array.isArray(value)?value:initialInstances}catch{return initialInstances}}
+export function saveWorkflowInstances(value:PrototypeStageInstance[]){localStorage.setItem(KEY,JSON.stringify(value))}

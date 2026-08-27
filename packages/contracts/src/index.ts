@@ -6,3 +6,4 @@ export * from "./review";
 export * from "./iam";
 export * from "./deliberation";
 export * from "./meeting";
+export * from "./workflow";
