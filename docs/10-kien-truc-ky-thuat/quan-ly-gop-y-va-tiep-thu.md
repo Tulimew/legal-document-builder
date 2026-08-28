@@ -49,6 +49,14 @@ Smoke test PostgreSQL development ngày 28/08/2026 đã đi qua toàn bộ chu�
 | `GET` | `/api/v1/projects/{projectId}/comments` | Danh sách ý kiến và trạng thái xử lý |
 | `POST` | `/api/v1/projects/{projectId}/comments` | Ghi nhận ý kiến |
 | `POST` | `/api/v1/projects/{projectId}/comments/{commentId}/resolutions` | Ghi một lần tiếp thu/giải trình mới |
+| `GET` | `/api/v1/projects/{projectId}/comments/{commentId}/resolutions` | Đọc toàn bộ lịch sử xử lý bất biến |
+| `GET` | `/api/v1/projects/{projectId}/draft-changes` | Liệt kê thay đổi đã chốt có thể làm căn cứ tiếp thu |
+
+## Phạm vi M3 development
+
+Màn tổng hợp M3 dùng PostgreSQL làm nguồn dữ liệu duy nhất khi hồ sơ development đã cấu hình. Người xử lý chọn một ý kiến, ghi một `CommentResolution` mới và xem lại toàn bộ sequence trước đó. Kết quả tiếp thu toàn bộ hoặc một phần bắt buộc liên kết ít nhất một `draft_legal_node_change`; tất cả thay đổi liên kết phải thuộc cùng `effective_draft_version_id`. Server đồng thời ghi chiều ngược trong `draft_change_basis`, vì vậy có thể truy từ ý kiến tới thay đổi và từ thay đổi về căn cứ xử lý.
+
+DOCX tổng hợp ý kiến trên màn M3 được dựng từ `Comment`, `CommentResolution` và các ID thay đổi đã lưu trong PostgreSQL, không đọc kho góp ý `localStorage`. Hồ sơ chưa có `LegalChange` đã chốt vẫn có thể ghi kết quả không tiếp thu kèm giải trình; thao tác tiếp thu được giữ khóa cho tới khi hoàn tất Bước 4.
 
 API yêu cầu adapter danh tính. `AUTH_MODE=development` chỉ dành cho máy phát triển; actor trong payload không được tin cậy. IAM và phân quyền chi tiết vẫn thuộc P0-06.
 

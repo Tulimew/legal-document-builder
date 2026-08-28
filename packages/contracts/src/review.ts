@@ -55,6 +55,21 @@ export interface CommentResolution {
   supersedesResolutionId?: EntityId;
 }
 
+export interface ReviewDraftChange {
+  contractVersion: ContractVersion;
+  id: EntityId;
+  projectId: EntityId;
+  legalNodeId: EntityId;
+  changeType: string;
+  fromDraftVersionId: EntityId;
+  effectiveDraftVersionId: EntityId;
+  effectiveDraftVersionCode: string;
+  beforeText: string;
+  afterText: string;
+  reason: string;
+  decidedAt: IsoDateTime;
+}
+
 export interface DraftAdjustmentBasis {
   sourceType: DraftAdjustmentSourceType;
   source: BusinessSourceRef;

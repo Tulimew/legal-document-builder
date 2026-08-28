@@ -38,4 +38,4 @@ Migration PostgreSQL được đặt tại `packages/database/`; chỉ chạy sa
 
 ## Trạng thái hiện tại
 
-Đã nghiệm thu mốc M2 trong môi trường development: PostgreSQL đã áp dụng migration `0001`–`0008`, seed hoàn toàn giả định đã tạo IAM/hồ sơ/workflow và smoke test xác nhận lần thực hiện bước vẫn tồn tại sau khi khởi động lại ứng dụng. Các module ngoài workflow vẫn có phần giao diện nguyên mẫu; M2 development không đồng nghĩa đã sẵn sàng triển khai production hoặc NAS.
+Đang triển khai mốc M3 trong môi trường development. Luồng tổng hợp góp ý đọc/ghi PostgreSQL, lưu lịch sử xử lý bất biến, liên kết kết quả tiếp thu với `DraftVersion` và `LegalChange` đã chốt, đồng thời sinh DOCX tổng hợp trực tiếp từ dữ liệu góp ý có cấu trúc. M3 chưa tích hợp AI thật và chưa phải bản sẵn sàng triển khai production hoặc NAS.
