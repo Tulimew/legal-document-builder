@@ -38,6 +38,7 @@ export interface Comment {
   receivedAt: IsoDateTime;
   recordedAt: IsoDateTime;
   recordedBy: ActorRef;
+  latestResolution?: CommentResolution;
 }
 
 export interface CommentResolution {

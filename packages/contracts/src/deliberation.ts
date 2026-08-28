@@ -17,6 +17,14 @@ export interface MemberResolutionOpinion {
   supersedesOpinionId?: EntityId;
 }
 
+export interface CreateMemberResolutionOpinionRequest {
+  contractVersion: ContractVersion;
+  proposedResolutionType: CommentResolutionType;
+  reasoning: string;
+  proposedDraftContent?: string;
+  correlationId: string;
+}
+
 export interface ResolutionOption {
   contractVersion: ContractVersion;
   id: EntityId;
@@ -49,6 +57,17 @@ export interface DecideResolutionCaseRequest {
   contractVersion: ContractVersion;
   decisionType: ResolutionDecisionType;
   selectedOptionId?: EntityId;
+  reason: string;
+  authorityBasis: string;
+  draftingInstruction?: string;
+  correlationId: string;
+}
+
+export interface RecordMeetingDecisionRequest {
+  contractVersion: ContractVersion;
+  decisionType: ResolutionDecisionType;
+  selectedOpinionId?: EntityId;
+  meetingOption?: string;
   reason: string;
   authorityBasis: string;
   draftingInstruction?: string;

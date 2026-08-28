@@ -1,4 +1,5 @@
 export * from "./asset";
+export * from "./amendment";
 export * from "./common";
 export * from "./drafting";
 export * from "./legal-content";

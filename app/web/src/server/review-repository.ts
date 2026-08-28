@@ -13,12 +13,16 @@ export class PostgresReviewRepository {
     const result = await this.pool.query(
       `SELECT c.*,
               coalesce(array_agg(DISTINCT t.legal_node_id) FILTER (WHERE t.legal_node_id IS NOT NULL), '{}') AS target_node_ids,
-              CASE WHEN max(r.sequence) IS NULL THEN 'PENDING' ELSE 'RESOLVED' END AS status
+              CASE WHEN latest.id IS NULL THEN 'PENDING' ELSE 'RESOLVED' END AS status,
+              latest.id AS resolution_id, latest.sequence AS resolution_sequence,
+              latest.resolution_type_code, latest.explanation, latest.effective_draft_version_id,
+              latest.decided_at, latest.decided_by_user_id, latest.supersedes_resolution_id
          FROM legal_builder.comment c
          LEFT JOIN legal_builder.comment_target_node t ON t.comment_id = c.id
-         LEFT JOIN legal_builder.comment_resolution r ON r.comment_id = c.id
+         LEFT JOIN LATERAL (SELECT * FROM legal_builder.comment_resolution r WHERE r.comment_id=c.id ORDER BY r.sequence DESC LIMIT 1) latest ON true
         WHERE c.project_id = $1
-        GROUP BY c.id
+        GROUP BY c.id,latest.id,latest.sequence,latest.resolution_type_code,latest.explanation,
+                 latest.effective_draft_version_id,latest.decided_at,latest.decided_by_user_id,latest.supersedes_resolution_id
         ORDER BY c.recorded_at DESC, c.id`,
       [projectId],
     );
@@ -38,6 +42,7 @@ export class PostgresReviewRepository {
       receivedAt: row.received_at.toISOString(),
       recordedAt: row.recorded_at.toISOString(),
       recordedBy: { userId: row.recorded_by_user_id },
+      ...(row.resolution_id?{latestResolution:{contractVersion:"1.1",id:row.resolution_id,commentId:row.id,sequence:Number(row.resolution_sequence),resolutionType:row.resolution_type_code,...(row.explanation?{explanation:row.explanation}:{}),linkedChangeIds:[],...(row.effective_draft_version_id?{effectiveDraftVersionId:row.effective_draft_version_id}:{}),decidedAt:row.decided_at.toISOString(),decidedBy:{userId:row.decided_by_user_id},...(row.supersedes_resolution_id?{supersedesResolutionId:row.supersedes_resolution_id}:{})}}:{})
     }));
   }
 

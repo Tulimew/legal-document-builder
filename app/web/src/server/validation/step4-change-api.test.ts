@@ -1,0 +1,8 @@
+import assert from "node:assert/strict";import test from "node:test";import {AppError} from "../errors";import{parseCreateStep4Change,parseDecideStep4Change,parseFinalizeStep4}from"./step4-change";
+const valid={contractVersion:"1.1",legalNodeId:"20000000-0000-4000-8000-000000000004",location:"Điều 1",beforeState:{content:"Cũ"},afterState:{content:"Mới"},sourceType:"TECHNICAL_EDIT",reason:"Chỉnh kỹ thuật",changesMeetingConclusion:false,correlationId:"cid"};
+test("nhận phiếu chỉnh lý hợp lệ",()=>assert.equal(parseCreateStep4Change(valid).location,"Điều 1"));
+test("từ chối trạng thái không thay đổi",()=>assert.throws(()=>parseCreateStep4Change({...valid,afterState:{content:"Cũ"}}),(error:unknown)=>error instanceof AppError&&error.code==="INVALID_REQUEST"));
+test("thay đổi kết luận bắt buộc có căn cứ",()=>assert.throws(()=>parseCreateStep4Change({...valid,changesMeetingConclusion:true}),(error:unknown)=>error instanceof AppError&&/căn cứ/.test(error.message)));
+test("quyết định bắt buộc lý do và căn cứ",()=>assert.equal(parseDecideStep4Change({contractVersion:"1.1",decisionType:"APPROVE",reason:"Đủ điều kiện",authorityBasis:"Kết luận họp",correlationId:"cid"}).decisionType,"APPROVE"));
+test("chốt phiên bản bắt buộc báo cáo và revision",()=>assert.equal(parseFinalizeStep4({contractVersion:"1.1",expectedRevision:2,versionCode:"DT-002",versionName:"Dự thảo 2",completionReport:"Đã xử lý đầy đủ các phiếu.",authorityBasis:"Kết luận của Tổ trưởng",correlationId:"cid"}).expectedRevision,2));
+test("từ chối mã phiên bản không hợp lệ",()=>assert.throws(()=>parseFinalizeStep4({contractVersion:"1.1",expectedRevision:2,versionCode:"Dự thảo 2",versionName:"Dự thảo 2",completionReport:"Đủ",authorityBasis:"Kết luận",correlationId:"cid"}),AppError));

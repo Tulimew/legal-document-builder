@@ -1,59 +1,70 @@
-import { readFile, writeFile } from "node:fs/promises";
+import {readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import pg from "pg";
 
-const { Client } = pg;
-if (process.env.ALLOW_DEVELOPMENT_SEED !== "true") throw new Error("Chỉ chạy seed khi ALLOW_DEVELOPMENT_SEED=true.");
-if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL chưa được cấu hình.");
-
-const ids = {
-  person: "10000000-0000-4000-8000-000000000101",
-  user: "10000000-0000-4000-8000-000000000102",
-  organization: "10000000-0000-4000-8000-000000000103",
-  project: "10000000-0000-4000-8000-000000000104",
-  membership: "10000000-0000-4000-8000-000000000105",
-  role: "10000000-0000-4000-8000-000000000106",
-  workflowDefinition: "10000000-0000-4000-8000-000000000107",
-  workflowVersion: "10000000-0000-4000-8000-000000000108",
+const{Client}=pg;
+if(process.env.ALLOW_DEVELOPMENT_SEED!=="true")throw new Error("Chỉ chạy seed khi ALLOW_DEVELOPMENT_SEED=true.");
+if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL chưa được cấu hình.");
+const id=(project,suffix)=>`10000000-0000-4000-8000-${String(project*100+suffix).padStart(12,"0")}`;
+const nodeId=(project,index)=>`20000000-0000-4000-8000-${String((project-1)*100+index).padStart(12,"0")}`;
+const commentId=(project,index)=>`40000000-0000-4000-8000-${String(project*100+index).padStart(12,"0")}`;
+const resolutionId=(project,index)=>`41000000-0000-4000-8000-${String(project*100+index).padStart(12,"0")}`;
+const person=id(1,1),user=id(1,2),organization=id(1,3),role=id(1,6),workflowDefinition=id(1,7),workflowVersion=id(1,8);
+const projects=[
+  {n:4,code:"HS-DEV-TT-02",name:"Thông tư sửa đổi một Thông tư",type:"CIRCULAR",layout:"ARTICLE_PER_DOCUMENT",targets:1},
+  {n:2,code:"HS-DEV-ND-01",name:"Nghị định sửa nhiều Nghị định — mỗi Điều sửa một Nghị định",type:"DECREE",layout:"ARTICLE_PER_DOCUMENT",targets:3},
+  {n:3,code:"HS-DEV-ND-02",name:"Nghị định sửa nhiều Nghị định — mỗi Chương sửa một Nghị định",type:"DECREE",layout:"CHAPTER_PER_DOCUMENT",targets:3},
+];
+const nodeTemplates=[["opening","Phần mở đầu","SECTION"],["basis","Căn cứ ban hành","SECTION"],["ch1","Chương I","CHAPTER"],["art1","Điều 1","ARTICLE"],["a1c1","Khoản 1 Điều 1","CLAUSE"],["a1c1a","Điểm a khoản 1 Điều 1","POINT"],["art2","Điều 2","ARTICLE"],["a2c2","Khoản 2 Điều 2","CLAUSE"],["art3","Điều 3","ARTICLE"],["art4","Điều 4","ARTICLE"],["art5","Điều 5","ARTICLE"]];
+const organizations=["Sở Tư pháp tỉnh A","Hiệp hội ngành nghề B","Cơ quan chuyên môn C","Ủy ban nhân dân tỉnh D","Đơn vị nghiên cứu E","Tổ chức xã hội F"];
+const commentVariants={
+  ACCEPTED_AND_UPDATED:["Thống nhất với nội dung dự thảo và đề nghị giữ cách thể hiện hiện tại.","Đồng ý với phương án tại dự thảo; đề nghị tiếp tục hoàn thiện kỹ thuật trình bày."],
+  PARTIALLY_ACCEPTED:["Đề nghị làm rõ thêm phạm vi áp dụng và trách nhiệm phối hợp của các cơ quan liên quan.","Cơ bản thống nhất nhưng đề nghị điều chỉnh một phần thời hạn và cách thức thực hiện."],
+  EXPLAINED_NOT_ACCEPTED:["Đề nghị bỏ quy định này vì cho rằng chưa cần thiết trong giai đoạn hiện nay.","Đề nghị áp dụng một phương án khác với định hướng đang thể hiện tại dự thảo."],
 };
+const explanations={ACCEPTED_AND_UPDATED:"Ghi nhận ý kiến đồng ý; tiếp tục rà soát kỹ thuật trên Dự thảo 1.",PARTIALLY_ACCEPTED:"Tiếp thu phần góp ý phù hợp; giữ nguyên các nội dung còn lại để bảo đảm tính thống nhất của dự thảo mẫu.",EXPLAINED_NOT_ACCEPTED:"Không tiếp thu đề xuất do chưa phù hợp phạm vi và mục tiêu của dự thảo mẫu; nội dung được giữ để tiếp tục xin ý kiến."};
+const pick=items=>items[Math.floor(Math.random()*items.length)];
 
-const client = new Client({ connectionString: process.env.DATABASE_URL, application_name: "legal-builder-development-seed" });
+const client=new Client({connectionString:process.env.DATABASE_URL,application_name:"legal-builder-development-seed"});
 await client.connect();
-try {
-  const database = (await client.query("SELECT current_database() AS name")).rows[0].name;
-  if (!database.endsWith("_dev")) throw new Error(`Từ chối seed database không có hậu tố _dev: ${database}`);
-  const migration = await client.query("SELECT 1 FROM public.legal_builder_schema_migration WHERE name='0008_workflow_foundation.sql'");
-  if (!migration.rowCount) throw new Error("Phải áp dụng migration 0008 trước khi seed.");
+try{
+  const database=(await client.query("SELECT current_database() AS name")).rows[0].name;
+  if(!database.endsWith("_dev"))throw new Error(`Từ chối seed database không có hậu tố _dev: ${database}`);
+  const migration=await client.query("SELECT 1 FROM public.legal_builder_schema_migration WHERE name='0013_step4_finalization.sql'");
+  if(!migration.rowCount)throw new Error("Phải áp dụng migration 0013 trước khi seed.");
   await client.query("BEGIN");
-  await client.query("INSERT INTO legal_builder.person(id,display_name,status_code,created_at) VALUES($1,'Chuyên viên phát triển mẫu','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[ids.person]);
-  await client.query("INSERT INTO legal_builder.organization(id,code,name,status_code,created_at) VALUES($1,'DEV-ORG','Đơn vị phát triển giả định','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[ids.organization]);
-  await client.query("INSERT INTO legal_builder.user_account(id,person_id,external_provider_code,external_subject,status_code,created_at) VALUES($1,$2,'development','developer-sample','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[ids.user,ids.person]);
-  await client.query("INSERT INTO legal_builder.legal_document_project(id,code,name,document_type_code,status_code,metadata,created_at,created_by_user_id) VALUES($1,'HS-DEV-001','Hồ sơ văn bản giả định dùng kiểm thử M2','CIRCULAR','ACTIVE','{\"sample\":true}'::jsonb,clock_timestamp(),$2) ON CONFLICT(id) DO NOTHING",[ids.project,ids.user]);
-  await client.query("INSERT INTO legal_builder.project_membership(id,project_id,user_id,person_id,organization_id,status_code,valid_from,created_at,created_by_user_id) VALUES($1,$2,$3,$4,$5,'ACTIVE',clock_timestamp(),clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[ids.membership,ids.project,ids.user,ids.person,ids.organization]);
-  await client.query("INSERT INTO legal_builder.role_definition(id,code,version_code,name,status_code,effective_from,created_at,created_by_user_id) VALUES($1,'DEV_WORKFLOW_MANAGER','1.0','Quản lý workflow phát triển','ACTIVE',clock_timestamp(),clock_timestamp(),$2) ON CONFLICT(id) DO NOTHING",[ids.role,ids.user]);
-  await client.query("INSERT INTO legal_builder.role_permission(role_definition_id,permission_code) SELECT $1,code FROM legal_builder.permission_definition WHERE code IN('WORKFLOW_READ','WORKFLOW_MANAGE','WORKFLOW_GATE_DECIDE') ON CONFLICT DO NOTHING",[ids.role]);
-  await client.query("INSERT INTO legal_builder.membership_role(membership_id,role_definition_id,assigned_at,assigned_by_user_id) VALUES($1,$2,clock_timestamp(),$3) ON CONFLICT DO NOTHING",[ids.membership,ids.role,ids.user]);
-  await client.query("INSERT INTO legal_builder.workflow_definition(id,code,name,created_at,created_by_user_id) VALUES($1,'WF-DEV-CIRCULAR','Quy trình phát triển giả định',clock_timestamp(),$2) ON CONFLICT(id) DO NOTHING",[ids.workflowDefinition,ids.user]);
-  await client.query("INSERT INTO legal_builder.workflow_version(id,definition_id,version_code,status_code,effective_from,approval_basis,configuration,created_at,created_by_user_id,approved_at,approved_by_user_id) VALUES($1,$2,'1.0.0-development','APPROVED',clock_timestamp(),'Phê duyệt dữ liệu giả định chỉ để kiểm thử development','{\"sample\":true}'::jsonb,clock_timestamp(),$3,clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[ids.workflowVersion,ids.workflowDefinition,ids.user]);
-  const stages=[["DRAFT","Soạn thảo và chỉnh lý",1],["CONSULT","Lấy và xử lý ý kiến",2],["APPRAISE","Thẩm định",3],["SUBMIT","Hoàn thiện hồ sơ trình",4]];
-  for(const [code,name,order] of stages) await client.query("INSERT INTO legal_builder.workflow_stage_definition(workflow_version_id,stage_code,name,stage_order,repeatable,parallel_allowed,gate_configuration) VALUES($1,$2,$3,$4,true,false,'{}'::jsonb) ON CONFLICT DO NOTHING",[ids.workflowVersion,code,name,order]);
-  await client.query("INSERT INTO legal_builder.project_workflow(project_id,workflow_version_id,assigned_at,assigned_by_user_id,migration_decision) VALUES($1,$2,clock_timestamp(),$3,'Gán workflow development ban đầu') ON CONFLICT(project_id) DO NOTHING",[ids.project,ids.workflowVersion,ids.user]);
-  await client.query("COMMIT");
-} catch(error) {
-  await client.query("ROLLBACK").catch(()=>undefined);
-  throw error;
-} finally {
-  await client.end();
-}
+  await client.query("INSERT INTO legal_builder.person(id,display_name,status_code,created_at) VALUES($1,'Chuyên viên phát triển mẫu','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[person]);
+  await client.query("INSERT INTO legal_builder.organization(id,code,name,status_code,created_at) VALUES($1,'DEV-ORG','Đơn vị phát triển giả định','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[organization]);
+  await client.query("INSERT INTO legal_builder.user_account(id,person_id,external_provider_code,external_subject,status_code,created_at) VALUES($1,$2,'development','developer-sample','ACTIVE',clock_timestamp()) ON CONFLICT(id) DO NOTHING",[user,person]);
+  await client.query("INSERT INTO legal_builder.role_definition(id,code,version_code,name,status_code,effective_from,created_at,created_by_user_id) VALUES($1,'DEV_WORKFLOW_MANAGER','1.0','Quản lý workflow phát triển','ACTIVE',clock_timestamp(),clock_timestamp(),$2) ON CONFLICT(id) DO NOTHING",[role,user]);
+  await client.query("INSERT INTO legal_builder.role_permission(role_definition_id,permission_code) SELECT $1,code FROM legal_builder.permission_definition WHERE code IN('WORKFLOW_READ','WORKFLOW_MANAGE','WORKFLOW_GATE_DECIDE','COMMENT_READ','COMMENT_CREATE','COMMENT_RESOLVE','RESOLUTION_OPINION_CREATE','RESOLUTION_DECIDE','WORKSPACE_READ','WORKSPACE_SAVE','AMENDMENT_TARGET_READ','AMENDMENT_TARGET_MANAGE','STEP4_CHANGE_READ','STEP4_CHANGE_CREATE','STEP4_CHANGE_DECIDE','STEP4_FINALIZE') ON CONFLICT DO NOTHING",[role]);
+  await client.query("INSERT INTO legal_builder.workflow_definition(id,code,name,created_at,created_by_user_id) VALUES($1,'WF-DEV-MULTI','Quy trình phát triển giả định',clock_timestamp(),$2) ON CONFLICT(id) DO NOTHING",[workflowDefinition,user]);
+  await client.query("INSERT INTO legal_builder.workflow_version(id,definition_id,version_code,status_code,effective_from,approval_basis,configuration,created_at,created_by_user_id,approved_at,approved_by_user_id) VALUES($1,$2,'1.0.0-development','APPROVED',clock_timestamp(),'Dữ liệu giả định để kiểm thử development','{\"sample\":true}'::jsonb,clock_timestamp(),$3,clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[workflowVersion,workflowDefinition,user]);
+  for(const[code,name,order]of[["DRAFT","Soạn thảo và chỉnh lý",1],["CONSULT","Lấy và xử lý ý kiến",2],["APPRAISE","Thẩm định",3],["SUBMIT","Hoàn thiện hồ sơ trình",4]])await client.query("INSERT INTO legal_builder.workflow_stage_definition(workflow_version_id,stage_code,name,stage_order,repeatable,parallel_allowed,gate_configuration) VALUES($1,$2,$3,$4,true,false,'{}'::jsonb) ON CONFLICT DO NOTHING",[workflowVersion,code,name,order]);
 
-const envPath=path.resolve(process.cwd(),".env.local");
-let envText="";
-try{envText=await readFile(envPath,"utf8")}catch{}
-function setEnv(text,key,value){const line=`${key}=${value}`;const pattern=new RegExp(`^${key}=.*$`,"m");return pattern.test(text)?text.replace(pattern,line):`${text.trimEnd()}\n${line}\n`}
-envText=setEnv(envText,"NEXT_PUBLIC_SAMPLE_PROJECT_ID",ids.project);
-envText=setEnv(envText,"NEXT_PUBLIC_DEVELOPMENT_USER_ID",ids.user);
-await writeFile(envPath,envText,"utf8");
-console.log("Development seed đã sẵn sàng.");
-console.log(`NEXT_PUBLIC_SAMPLE_PROJECT_ID=${ids.project}`);
-console.log(`NEXT_PUBLIC_DEVELOPMENT_USER_ID=${ids.user}`);
+  for(const project of projects){
+    const projectId=id(project.n,4),membership=id(project.n,5),legalDocument=id(project.n,9),branch=id(project.n,10),draft=id(project.n,11),basis=id(project.n,12),round=id(project.n,13),workspace=id(project.n,14),layout=id(project.n,19);
+    await client.query("INSERT INTO legal_builder.legal_document_project(id,code,name,document_type_code,status_code,metadata,created_at,created_by_user_id) VALUES($1,$2,$3,$4,'ACTIVE','{\"sample\":true,\"draft\":1,\"stage\":\"CONSULTATION\"}'::jsonb,clock_timestamp(),$5) ON CONFLICT(id) DO UPDATE SET code=excluded.code,name=excluded.name,document_type_code=excluded.document_type_code,metadata=excluded.metadata",[projectId,project.code,project.name,project.type,user]);
+    await client.query("INSERT INTO legal_builder.project_membership(id,project_id,user_id,person_id,organization_id,status_code,valid_from,created_at,created_by_user_id) VALUES($1,$2,$3,$4,$5,'ACTIVE',clock_timestamp(),clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[membership,projectId,user,person,organization]);
+    await client.query("INSERT INTO legal_builder.membership_role(membership_id,role_definition_id,assigned_at,assigned_by_user_id) VALUES($1,$2,clock_timestamp(),$3) ON CONFLICT DO NOTHING",[membership,role,user]);
+    await client.query("INSERT INTO legal_builder.project_workflow(project_id,workflow_version_id,assigned_at,assigned_by_user_id,migration_decision) VALUES($1,$2,clock_timestamp(),$3,'Gán workflow development') ON CONFLICT(project_id) DO NOTHING",[projectId,workflowVersion,user]);
+    await client.query("INSERT INTO legal_builder.legal_document(id,project_id,relation_type_code,metadata,created_at,created_by_user_id) VALUES($1,$2,'ORIGINAL','{\"sample\":true}'::jsonb,clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[legalDocument,projectId,user]);
+    await client.query("INSERT INTO legal_builder.draft_branch(id,project_id,code,name,purpose,status,created_at,created_by_user_id) VALUES($1,$2,'MAIN','Nhánh chính','Dự thảo 1 đang xin ý kiến','ACTIVE',clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[branch,projectId,user]);
+    await client.query("INSERT INTO legal_builder.draft_version(id,project_id,branch_id,legal_document_id,code,name,contract_version,ruleset_definition_id,ruleset_version_id,ruleset_version_code,document_snapshot,snapshot_checksum_sha256,sealed_at,sealed_by_user_id) VALUES($1,$2,$3,$4,'DT-001','Dự thảo 1','1.1','30000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000002','1.1-user-confirmed','{\"sample\":true,\"draftNumber\":1}'::jsonb,repeat('0',64),clock_timestamp(),$5) ON CONFLICT(id) DO NOTHING",[draft,projectId,branch,legalDocument,user]);
+    await client.query("INSERT INTO legal_builder.draft_version_basis(id,version_id,basis_type_code,source_type_code,source_id,role_code,summary,recorded_at,recorded_by_user_id) VALUES($1,$2,'DEVELOPMENT_SEED','PROJECT',$3,'PRIMARY','Dữ liệu giả định cho Dự thảo 1',clock_timestamp(),$4) ON CONFLICT(id) DO NOTHING",[basis,draft,projectId,user]);
+    await client.query("INSERT INTO legal_builder.draft_workspace(id,project_id,branch_id,legal_document_id,revision,contract_version,ruleset_definition_id,ruleset_version_id,ruleset_version_code,document_metadata,source_relations,updated_at,updated_by_user_id,updated_by_person_id,updated_by_membership_id) VALUES($1,$2,$3,$4,0,'1.1','30000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000002','1.1-user-confirmed','{\"sample\":true,\"draftNumber\":1}'::jsonb,'[]'::jsonb,clock_timestamp(),$5,$6,$7) ON CONFLICT(id) DO NOTHING",[workspace,projectId,branch,legalDocument,user,person,membership]);
+    for(let index=0;index<nodeTemplates.length;index++){const[localId,label,type]=nodeTemplates[index],legalNode=nodeId(project.n,index+1);await client.query("INSERT INTO legal_builder.legal_node_version_state(draft_version_id,legal_node_id,exists_at_version,node_type_code,parent_node_id,order_key,display_number,node_snapshot) VALUES($1,$2,true,$3,NULL,$4,$5,$6::jsonb) ON CONFLICT DO NOTHING",[draft,legalNode,type,String(index+1).padStart(4,"0"),label,JSON.stringify({sample:true,localId,label})]);await client.query("INSERT INTO legal_builder.workspace_legal_node(workspace_id,legal_node_id,node_type_code,parent_node_id,order_key,title,content_blocks,metadata,display_number,display_number_locked,lifecycle_status_code,updated_at,updated_by_user_id) VALUES($1,$2,$3,NULL,$4,$5,$6::jsonb,$7::jsonb,$5,false,'ACTIVE',clock_timestamp(),$8) ON CONFLICT DO NOTHING",[workspace,legalNode,type,String(index+1).padStart(4,"0"),label,JSON.stringify([{kind:"PARAGRAPH",spans:[{text:`Nội dung giả định của ${label} trong ${project.name}.`}]}]),JSON.stringify({sample:true,localId}),user]);}
+    await client.query("INSERT INTO legal_builder.review_round(id,project_id,source_draft_version_id,round_type_code,code,name,opened_at,opened_by_user_id) VALUES($1,$2,$3,'CONSULTATION','RV-DT1','Đợt xin ý kiến Dự thảo 1',clock_timestamp(),$4) ON CONFLICT(id) DO NOTHING",[round,projectId,draft,user]);
+    for(let targetIndex=1;targetIndex<=project.targets;targetIndex++){const sourceDocument=id(project.n,14+targetIndex*2-1),sourceVersion=id(project.n,14+targetIndex*2),target=id(project.n,30+targetIndex);await client.query("INSERT INTO legal_builder.amendment_source_document(id,project_id,code,title,document_type_code,identifying_metadata,created_at,created_by_user_id) VALUES($1,$2,$3,$4,$5,'{\"sample\":true}'::jsonb,clock_timestamp(),$6) ON CONFLICT(id) DO NOTHING",[sourceDocument,projectId,`VB-GOC-${targetIndex}`,`${project.type==="CIRCULAR"?"Thông tư":"Nghị định"} gốc giả định ${targetIndex}`,project.type,user]);await client.query("INSERT INTO legal_builder.amendment_source_version(id,source_document_id,version_number,structured_snapshot,checksum_sha256,verification_status_code,source_description,recorded_at,recorded_by_user_id,verified_at,verified_by_user_id) VALUES($1,$2,1,'{\"sample\":true,\"nodes\":[]}'::jsonb,repeat('1',64),'VERIFIED','Nguồn giả định đã kiểm chứng để thử nghiệm',clock_timestamp(),$3,clock_timestamp(),$3) ON CONFLICT(id) DO NOTHING",[sourceVersion,sourceDocument,user]);await client.query("INSERT INTO legal_builder.amendment_target(id,project_id,source_document_id,source_version_id,target_order,status_code,created_at,created_by_user_id) VALUES($1,$2,$3,$4,$5,'ACTIVE',clock_timestamp(),$6) ON CONFLICT(project_id,target_order) DO NOTHING",[target,projectId,sourceDocument,sourceVersion,targetIndex,user]);}
+    await client.query("INSERT INTO legal_builder.amendment_layout_configuration(id,project_id,layout_mode_code,ruleset_version_code,decision_basis,status_code,created_at,created_by_user_id) VALUES($1,$2,$3,'1.1-user-confirmed','Quy tắc nghiệp vụ do người dùng xác nhận.','ACTIVE',clock_timestamp(),$4) ON CONFLICT(id) DO NOTHING",[layout,projectId,project.layout,user]);
+    const resolutionTypes=["ACCEPTED_AND_UPDATED","PARTIALLY_ACCEPTED","EXPLAINED_NOT_ACCEPTED","ACCEPTED_AND_UPDATED","PARTIALLY_ACCEPTED","EXPLAINED_NOT_ACCEPTED"];
+    for(let index=0;index<resolutionTypes.length;index++){const type=resolutionTypes[index],comment=commentId(project.n,index+1),resolution=resolutionId(project.n,index+1),targetNode=nodeId(project.n,4+(index%6)),target=nodeTemplates[3+(index%6)]?.[1]??"Ý kiến khác";await client.query("INSERT INTO legal_builder.comment(id,project_id,review_round_id,source_draft_version_id,target_scope_type_code,issue_group,target_description,contributor_organization_name,comment_content,received_at,recorded_at,recorded_by_user_id) VALUES($1,$2,$3,$4,'ARTICLE',$5,$5,$6,$7,clock_timestamp()-interval '2 days',clock_timestamp()-interval '1 day',$8) ON CONFLICT(id) DO NOTHING",[comment,projectId,round,draft,target,organizations[index],pick(commentVariants[type]),user]);await client.query("INSERT INTO legal_builder.comment_target_node(comment_id,draft_version_id,legal_node_id) VALUES($1,$2,$3) ON CONFLICT DO NOTHING",[comment,draft,targetNode]);await client.query("INSERT INTO legal_builder.comment_resolution(id,comment_id,sequence,resolution_type_code,explanation,effective_draft_version_id,decided_at,decided_by_user_id) VALUES($1,$2,1,$3,$4,$5,clock_timestamp(),$6) ON CONFLICT(id) DO NOTHING",[resolution,comment,type,explanations[type],type==="EXPLAINED_NOT_ACCEPTED"?null:draft,user]);}
+  }
+  await client.query("COMMIT");
+}catch(error){await client.query("ROLLBACK").catch(()=>undefined);throw error}finally{await client.end()}
+
+const first=projects[0],envPath=path.resolve(process.cwd(),".env.local");let envText="";try{envText=await readFile(envPath,"utf8")}catch{}const originalEnvText=envText;
+function setEnv(text,key,value){const line=`${key}=${value}`,pattern=new RegExp(`^${key}=.*$`,"m");return pattern.test(text)?text.replace(pattern,line):`${text.trimEnd()}\n${line}\n`}
+envText=setEnv(envText,"NEXT_PUBLIC_SAMPLE_PROJECT_ID",id(first.n,4));envText=setEnv(envText,"NEXT_PUBLIC_DEVELOPMENT_USER_ID",user);envText=setEnv(envText,"NEXT_PUBLIC_DEVELOPMENT_MEMBERSHIP_ID",id(first.n,5));envText=setEnv(envText,"NEXT_PUBLIC_SAMPLE_REVIEW_ROUND_ID",id(first.n,13));envText=setEnv(envText,"NEXT_PUBLIC_SAMPLE_DRAFT_VERSION_ID",id(first.n,11));envText=setEnv(envText,"NEXT_PUBLIC_SAMPLE_WORKSPACE_ID",id(first.n,14));if(envText!==originalEnvText){try{await writeFile(envPath,envText,"utf8")}catch(error){console.warn(`Đã seed database nhưng không cập nhật được .env.local: ${error.message}`)}}
+console.log("Đã tạo 3 dự án development, mỗi dự án có Dự thảo 1, đợt góp ý và 6 ý kiến mẫu.");

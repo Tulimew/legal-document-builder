@@ -6,6 +6,8 @@ Mô-đun tạo dữ liệu nguồn để xây một phiên bản dự thảo m�
 
 Hai mẫu DOCX nguyên mẫu được khai báo tại `app/web/src/config/publishing-templates/v1.json`, có mã, phiên bản và trạng thái riêng. Khi có tệp mẫu chính thức, phải tạo phiên bản mẫu mới và ánh xạ dữ liệu; không sửa hồi tố cấu hình mẫu đã được sử dụng.
 
+M2 development đã nối màn hình Bước 1 với API comments/PostgreSQL khi hồ sơ, phiên bản dự thảo và đợt góp ý mẫu được cấu hình. Seed development tạo các đối tượng giả định và quyền `COMMENT_READ`/`COMMENT_CREATE`; nếu thiếu cấu hình, màn hình cũ chỉ được dùng như fallback nguyên mẫu. Màn hình xử lý kết quả, liên kết thay đổi và xuất biểu mẫu vẫn cần được chuyển hoàn toàn khỏi localStorage trong hạng mục tiếp theo.
+
 ## Luồng nghiệp vụ
 
 1. Mở `ReviewRound` và ghim `sourceDraftVersionId`; ý kiến không được tự chuyển sang phiên bản nguồn khác.
@@ -17,6 +19,18 @@ Hai mẫu DOCX nguyên mẫu được khai báo tại `app/web/src/config/publis
 7. Tạo DraftVersion mới với phiên bản trước làm parent và các nguồn xử lý làm basis.
 
 Chỉ đạo và việc Tổ soạn thảo tự điều chỉnh không được giả làm ý kiến góp ý. Chúng dùng nguồn `DIRECTION` hoặc `DRAFTING_TEAM_INITIATIVE` riêng khi liên kết thay đổi.
+
+### Sửa đổi phát sinh tại Bước 4
+
+Workspace hoàn thiện dự thảo cho phép phát sinh thêm sửa đổi nhưng không ghi đè `DraftVersion` đã dùng để xin ý kiến hoặc kết luận. Mỗi sửa đổi trước hết được ghi thành phiếu chờ duyệt, gồm nội dung trước/sau, nút cấu trúc, người thực hiện, thời điểm, lý do và một trong bốn nguồn: thực hiện kết luận Bước 3, chỉnh lý kỹ thuật, Tổ soạn thảo tự điều chỉnh hoặc chỉ đạo/tình tiết mới.
+
+Tổ soạn thảo tự điều chỉnh và chỉ đạo mới bắt buộc có căn cứ thẩm quyền. Nếu nội dung phát sinh làm thay đổi kết luận Bước 3, giao diện cảnh báo và bắt buộc ghi căn cứ kết luận bổ sung; chưa có quyết định phù hợp thì phiếu không được chuyển thành `LegalChange` đã áp dụng. Khi được duyệt, thay đổi phải được đưa vào một `DraftVersion` mới và liên kết nguồn; không sửa snapshot bất biến của phiên bản trước.
+
+Phiếu Bước 4 được lưu trong PostgreSQL theo migration `0012_step4_change_proposal.sql`. API cho phép tạo, liệt kê và ghi quyết định duyệt, từ chối hoặc yêu cầu sửa; đề xuất và mọi quyết định là bản ghi bất biến, quyết định sau tham chiếu quyết định bị thay thế. Giao diện chỉ dùng `localStorage` làm fallback có cảnh báo khi workspace phát triển chưa được cấu hình.
+
+Migration `0013_step4_finalization.sql` hoàn thiện thao tác kết thúc Bước 4. Trước khi chốt, server kiểm tra workspace revision, mọi phiếu chưa xuất bản đã có quyết định, không còn phiếu yêu cầu sửa, có ít nhất một phiếu được duyệt và chuỗi `beforeState → afterState` khớp nội dung hiện tại theo từng LegalNode. Một transaction duy nhất tạo checkpoint `PRE_VERSION`, `DraftVersion` bất biến, cạnh phiên bản cha, trạng thái tất cả LegalNode, `draft_legal_node_change`, căn cứ thay đổi, căn cứ phiên bản, liên kết phiếu–thay đổi–lần chốt và audit event; sau đó mới đồng bộ workspace sang mốc mới. Báo cáo hoàn thành và căn cứ thẩm quyền là dữ liệu bắt buộc. Phiếu bị từ chối vẫn được giữ trong lịch sử nhưng không đi vào phiên bản mới.
+
+Smoke test PostgreSQL development ngày 28/08/2026 đã đi qua toàn bộ chuỗi tạo phiếu → duyệt → kiểm tra điều kiện → chốt phiên bản và đối chiếu thành công checksum, parent edge, version basis, LegalChange, proposal link và audit. Kết quả này hoàn thiện luồng nghiệp vụ thủ công của Bước 4 trong M2 development; không phải nghiệm thu triển khai NAS hoặc pipeline xuất bản DOCX/PDF.
 
 ## Bất biến và sửa sai
 

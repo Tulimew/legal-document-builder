@@ -1,0 +1,3 @@
+import Link from "next/link";
+import {ProjectSelector} from "./project-selector";
+export default function ProjectAdministrationPage(){return <main className="min-h-screen bg-slate-100 p-5"><div className="mx-auto max-w-6xl space-y-4"><header className="rounded-xl border bg-white p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="eyebrow">Quản trị · Dữ liệu thử nghiệm</p><h1 className="mt-1 text-2xl font-bold">Lựa chọn dự án</h1><p className="mt-2 text-sm text-slate-600">Ba hồ sơ giả định dùng để kiểm thử các mô hình sửa đổi một hoặc nhiều văn bản.</p></div><Link className="button button-secondary" href="/">← Tổng quan</Link></div></header><ProjectSelector/></div></main>}

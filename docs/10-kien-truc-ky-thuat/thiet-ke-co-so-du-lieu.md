@@ -91,6 +91,10 @@ Quan hệ cha trong `workspace_legal_node` là FK ghép `(workspace_id, parent_n
 | `draft_checkpoint` | Snapshot khôi phục bất biến của workspace revision |
 | `draft_version` | Mốc dự thảo bất biến, có snapshot, RuleSet và người chốt |
 | `draft_version_edge` | Cha trực tiếp hoặc nguồn hợp nhất |
+| `amendment_source_document`, `amendment_source_version`, `amendment_source_node` | Văn bản gốc, phiên bản nguồn đã kiểm chứng và cây nút nguồn |
+| `amendment_target` | Một văn bản gốc cụ thể nằm trong phạm vi của dự thảo sửa đổi; một hồ sơ có thể có nhiều target |
+| `amendment_operation`, `amendment_operation_target_node` | Lệnh sửa đổi có thứ tự và ánh xạ tới đúng nút của đúng phiên bản nguồn |
+| `consolidated_projection` | Bản dự kiến riêng cho từng văn bản gốc; không phải văn bản hợp nhất chính thức |
 | `draft_version_basis` | Một hoặc nhiều căn cứ tạo version |
 | `legal_node_version_state` | Trạng thái nút tại version để so sánh |
 
@@ -102,6 +106,8 @@ Constraint trigger deferred bảo đảm mỗi version có ít nhất một căn
 | --- | --- |
 | `draft_legal_node_change` | Biến động của cùng LegalNode giữa hai DraftVersion |
 | `draft_change_basis` | Ít nhất một nguồn nghiệp vụ cho thay đổi |
+| `step4_change_proposal`, `step4_change_decision` | Phiếu chỉnh lý và chuỗi quyết định bất biến tại Bước 4 |
+| `step4_finalization`, `step4_finalization_proposal` | Lần chốt phiên bản và ánh xạ mỗi phiếu đã duyệt sang đúng LegalChange |
 
 `before_state`/`after_state` lưu contract JSON object; mã thay đổi tách rõ thêm, bỏ, đổi số, di chuyển, sửa nội dung và di chuyển kèm sửa nội dung.
 

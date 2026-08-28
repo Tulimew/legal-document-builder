@@ -19,6 +19,19 @@ Mô hình lưu lệnh sửa đổi có truy nguyên thay vì chỉ lưu bản n�
 
 Phiên bản nguồn phải được đóng dấu trạng thái kiểm chứng. Nếu chưa xác nhận đầy đủ, giao diện phải hiển thị rõ “nguồn chưa được kiểm chứng”, không che giấu bằng projection trông hoàn chỉnh.
 
+### 2.2. Một văn bản sửa nhiều văn bản
+
+Một dự thảo sửa đổi có thể có nhiều `AmendmentTarget`; mỗi target liên kết đúng một văn bản gốc và một phiên bản nguồn đã kiểm chứng. Mọi `AmendmentOperation` thuộc đúng một target, vì vậy ID nút đích luôn được hiểu trong phạm vi đúng văn bản và phiên bản nguồn, không dựa riêng vào số hiển thị. Hệ thống sinh một `ConsolidatedProjection` độc lập cho mỗi target; không ghép toàn văn của nhiều văn bản gốc thành một projection hoặc một văn bản hợp nhất duy nhất.
+
+Người dùng lựa chọn một trong hai bố cục đã được xác nhận cho dự thảo sửa đổi nhiều văn bản:
+
+- `ARTICLE_PER_DOCUMENT`: mỗi điều sửa đổi một văn bản;
+- `CHAPTER_PER_DOCUMENT`: mỗi chương sửa đổi một văn bản, trong chương có thể có nhiều điều chứa các nhóm thao tác đối với văn bản đó.
+
+Lựa chọn bố cục là cấu hình có phiên bản, được lưu lịch sử và gắn với phiên bản RuleSet. Việc đổi bố cục chỉ thay đổi cách nhóm và xuất bản nội dung; không thay đổi `AmendmentTarget`, `AmendmentOperation`, liên kết căn cứ hoặc projection của từng văn bản nguồn. Các điều về trách nhiệm thực hiện, chuyển tiếp và hiệu lực nằm ngoài nhóm của từng văn bản đích.
+
+Schema M2 dùng các bảng `amendment_source_document`, `amendment_source_version`, `amendment_source_node`, `amendment_target`, `amendment_operation`, `amendment_operation_target_node` và `consolidated_projection`. Phiên bản nguồn, thao tác và projection là dữ liệu bất biến; thay đổi tạo bản ghi mới có liên kết thay thế.
+
 ### 2.1. Nhập và kiểm chứng văn bản gốc
 
 - Ưu tiên nhập từ DOCX hoặc dữ liệu có cấu trúc; kết quả nhập luôn cần đối chiếu.
