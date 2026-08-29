@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { ActorRef, Comment, CommentResolution, CreateCommentRequest, ResolveCommentRequest } from "@legal-document-builder/contracts";
+import type { ActorRef, Comment, CommentResolution, CreateCommentRequest, ResolveCommentRequest, ReviewDraftChange } from "@legal-document-builder/contracts";
 import type { Pool, PoolClient } from "pg";
 
 import { inTransaction } from "./database";
@@ -16,10 +16,12 @@ export class PostgresReviewRepository {
               CASE WHEN latest.id IS NULL THEN 'PENDING' ELSE 'RESOLVED' END AS status,
               latest.id AS resolution_id, latest.sequence AS resolution_sequence,
               latest.resolution_type_code, latest.explanation, latest.effective_draft_version_id,
-              latest.decided_at, latest.decided_by_user_id, latest.supersedes_resolution_id
+              latest.decided_at, latest.decided_by_user_id, latest.supersedes_resolution_id,
+              coalesce(array_agg(DISTINCT rc.change_id) FILTER (WHERE rc.change_id IS NOT NULL), '{}') AS linked_change_ids
          FROM legal_builder.comment c
          LEFT JOIN legal_builder.comment_target_node t ON t.comment_id = c.id
          LEFT JOIN LATERAL (SELECT * FROM legal_builder.comment_resolution r WHERE r.comment_id=c.id ORDER BY r.sequence DESC LIMIT 1) latest ON true
+         LEFT JOIN legal_builder.comment_resolution_change rc ON rc.resolution_id = latest.id
         WHERE c.project_id = $1
         GROUP BY c.id,latest.id,latest.sequence,latest.resolution_type_code,latest.explanation,
                  latest.effective_draft_version_id,latest.decided_at,latest.decided_by_user_id,latest.supersedes_resolution_id
@@ -42,7 +44,50 @@ export class PostgresReviewRepository {
       receivedAt: row.received_at.toISOString(),
       recordedAt: row.recorded_at.toISOString(),
       recordedBy: { userId: row.recorded_by_user_id },
-      ...(row.resolution_id?{latestResolution:{contractVersion:"1.1",id:row.resolution_id,commentId:row.id,sequence:Number(row.resolution_sequence),resolutionType:row.resolution_type_code,...(row.explanation?{explanation:row.explanation}:{}),linkedChangeIds:[],...(row.effective_draft_version_id?{effectiveDraftVersionId:row.effective_draft_version_id}:{}),decidedAt:row.decided_at.toISOString(),decidedBy:{userId:row.decided_by_user_id},...(row.supersedes_resolution_id?{supersedesResolutionId:row.supersedes_resolution_id}:{})}}:{})
+      ...(row.resolution_id?{latestResolution:{contractVersion:"1.1",id:row.resolution_id,commentId:row.id,sequence:Number(row.resolution_sequence),resolutionType:row.resolution_type_code,...(row.explanation?{explanation:row.explanation}:{}),linkedChangeIds:row.linked_change_ids,...(row.effective_draft_version_id?{effectiveDraftVersionId:row.effective_draft_version_id}:{}),decidedAt:row.decided_at.toISOString(),decidedBy:{userId:row.decided_by_user_id},...(row.supersedes_resolution_id?{supersedesResolutionId:row.supersedes_resolution_id}:{})}}:{})
+    }));
+  }
+
+  async listResolutions(projectId: string, commentId: string): Promise<CommentResolution[]> {
+    const result = await this.pool.query(
+      `SELECT r.*, coalesce(array_agg(rc.change_id ORDER BY rc.change_id) FILTER (WHERE rc.change_id IS NOT NULL), '{}') AS linked_change_ids
+         FROM legal_builder.comment_resolution r
+         JOIN legal_builder.comment c ON c.id = r.comment_id AND c.project_id = $1
+         LEFT JOIN legal_builder.comment_resolution_change rc ON rc.resolution_id = r.id
+        WHERE r.comment_id = $2
+        GROUP BY r.id
+        ORDER BY r.sequence DESC`,
+      [projectId, commentId],
+    );
+    return result.rows.map((row) => ({
+      contractVersion: "1.1", id: row.id, commentId: row.comment_id, sequence: Number(row.sequence),
+      resolutionType: row.resolution_type_code, ...(row.explanation ? { explanation: row.explanation } : {}),
+      linkedChangeIds: row.linked_change_ids,
+      ...(row.effective_draft_version_id ? { effectiveDraftVersionId: row.effective_draft_version_id } : {}),
+      decidedAt: row.decided_at.toISOString(), decidedBy: { userId: row.decided_by_user_id },
+      ...(row.supersedes_resolution_id ? { supersedesResolutionId: row.supersedes_resolution_id } : {}),
+    }));
+  }
+
+  async listDraftChanges(projectId: string): Promise<ReviewDraftChange[]> {
+    const result = await this.pool.query(
+      `SELECT ch.*, v.code AS effective_version_code
+         FROM legal_builder.draft_legal_node_change ch
+         JOIN legal_builder.draft_version v ON v.id = ch.effective_version_id AND v.project_id = ch.project_id
+        WHERE ch.project_id = $1
+        ORDER BY ch.decided_at DESC, ch.id`,
+      [projectId],
+    );
+    const nodeText = (snapshot: unknown): string => {
+      const value = snapshot as { content?: Array<{ spans?: Array<{ text?: string }> }> } | null;
+      return value?.content?.flatMap((block) => block.spans ?? []).map((span) => span.text ?? "").join("") ?? "";
+    };
+    return result.rows.map((row) => ({
+      contractVersion: "1.1", id: row.id, projectId: row.project_id, legalNodeId: row.legal_node_id,
+      changeType: row.change_type, fromDraftVersionId: row.from_version_id,
+      effectiveDraftVersionId: row.effective_version_id, effectiveDraftVersionCode: row.effective_version_code,
+      beforeText: nodeText(row.before_state), afterText: nodeText(row.after_state), reason: row.reason,
+      decidedAt: row.decided_at.toISOString(),
     }));
   }
 
@@ -104,10 +149,13 @@ export class PostgresReviewRepository {
       }
       if (request.linkedChangeIds.length) {
         const changes = await client.query(
-          `SELECT id FROM legal_builder.draft_legal_node_change WHERE project_id = $1 AND id = ANY($2::uuid[])`,
+          `SELECT id, effective_version_id FROM legal_builder.draft_legal_node_change WHERE project_id = $1 AND id = ANY($2::uuid[])`,
           [projectId, request.linkedChangeIds],
         );
         if (changes.rowCount !== request.linkedChangeIds.length) throw new AppError("INVALID_REQUEST", "Có thay đổi dự thảo không thuộc hồ sơ.");
+        if (changes.rows.some((change) => change.effective_version_id !== request.effectiveDraftVersionId)) {
+          throw new AppError("INVALID_REQUEST", "Mọi thay đổi liên kết phải thuộc đúng phiên bản dự thảo áp dụng.");
+        }
       }
       const id = randomUUID();
       const sequence = previous.rowCount ? Number(previous.rows[0].sequence) + 1 : 1;

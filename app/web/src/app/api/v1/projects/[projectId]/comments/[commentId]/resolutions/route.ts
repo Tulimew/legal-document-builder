@@ -10,6 +10,22 @@ import { assertUuid } from "@/server/validation/workspace";
 export const runtime = "nodejs";
 type Context = RouteContext<"/api/v1/projects/[projectId]/comments/[commentId]/resolutions">;
 
+export async function GET(request: Request, context: Context): Promise<Response> {
+  const requestCorrelationId = correlationId(request);
+  try {
+    const identity = authenticate(request.headers);
+    const { projectId, commentId } = await context.params;
+    assertUuid(projectId, "projectId");
+    assertUuid(commentId, "commentId");
+    const pool = databasePool();
+    await authorizeProject(pool, identity, projectId, "COMMENT_READ");
+    const resolutions = await new PostgresReviewRepository(pool).listResolutions(projectId, commentId);
+    return success(resolutions, 200, requestCorrelationId);
+  } catch (error) {
+    return failure(error, requestCorrelationId);
+  }
+}
+
 export async function POST(request: Request, context: Context): Promise<Response> {
   let requestCorrelationId = correlationId(request);
   try {
