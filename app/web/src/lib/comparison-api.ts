@@ -1,0 +1,6 @@
+import type {DraftVersionComparisonPage,DraftVersionSummary,ProvenancePage} from "@legal-document-builder/contracts";import {editorHeaders} from "./editor-api";
+export const comparisonProjectId=process.env.NEXT_PUBLIC_SAMPLE_PROJECT_ID;
+async function data<T>(response:Response):Promise<T>{const value=await response.json();if(!response.ok)throw new Error(value.error?.message??"Không đọc được dữ liệu.");return value.data}
+export async function listDraftVersions():Promise<DraftVersionSummary[]>{if(!comparisonProjectId)throw new Error("NEXT_PUBLIC_SAMPLE_PROJECT_ID chưa được cấu hình.");return data(await fetch(`/api/v1/projects/${comparisonProjectId}/draft-versions`,{headers:editorHeaders()}))}
+export async function compareDraftVersions(baseVersionId:string,targetVersionId:string):Promise<DraftVersionComparisonPage>{return data(await fetch(`/api/v1/projects/${comparisonProjectId}/draft-version-comparisons?baseVersionId=${baseVersionId}&targetVersionId=${targetVersionId}`,{headers:editorHeaders()}))}
+export async function loadProvenance(anchor:"changeId"|"legalNodeId",id:string):Promise<ProvenancePage>{return data(await fetch(`/api/v1/projects/${comparisonProjectId}/provenance?${anchor}=${id}`,{headers:editorHeaders()}))}

@@ -1,0 +1,4 @@
+import assert from "node:assert/strict";import {readFileSync} from "node:fs";import path from "node:path";import test from "node:test";
+const root=path.resolve(process.cwd(),"src"),page=readFileSync(path.join(root,"app/ho-so/du-thao-thong-tu-mau/soan-thao/ban-so-sanh/page.tsx"),"utf8"),ui=readFileSync(path.join(root,"components/editor/persistent-comparison-workbench.tsx"),"utf8");
+test("live comparison page has no mock or localStorage source",()=>{assert.doesNotMatch(page,/mock-data|ComparisonExplanationWorkbench/);assert.doesNotMatch(ui,/mock-data|localStorage/);assert.match(ui,/compareDraftVersions/);assert.match(ui,/loadProvenance/)});
+test("live UI renders movement detail and unavailable evolution explicitly",()=>{assert.match(ui,/movementDetail/);assert.match(ui,/không có edge chứng minh/);assert.match(ui,/Stable LegalNode/)});

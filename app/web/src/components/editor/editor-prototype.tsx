@@ -1,51 +1,22 @@
 "use client";
+import type{DraftWorkspace,LegalDocumentSnapshot}from"@legal-document-builder/contracts";
+import{useCallback,useEffect,useRef,useState}from"react";
+import{AutosaveCoordinator,replaceNodeContent,requiresNavigationWarning,type EditorSaveState}from"@/lib/editor-state";
+import{loadEditorWorkspace,saveEditorWorkspace}from"@/lib/editor-api";
+import{EditorTopbar}from"./editor-topbar";
+import{EditorWorkspace}from"./editor-workspace";
+import{InspectorPanel}from"./inspector-panel";
+import{StructureTree}from"./structure-tree";
 
-import { useEffect, useRef, useState } from "react";
-import type { AmendmentOperation, DraftChange, MockComment, ResolutionCase, TreeNode } from "@/lib/mock-data";
-import { SampleBanner } from "@/components/sample-banner";
-import { EditorTopbar } from "./editor-topbar";
-import { StructureTree } from "./structure-tree";
-import { EditorWorkspace } from "./editor-workspace";
-import { InspectorPanel } from "./inspector-panel";
-import { VersionCreationDialog } from "./version-creation-dialog";
-
-type Mode = "structure" | "traditional" | "compare" | "amendment";
-
-type Direction = {id:string;type:string;title:string;date:string;nodes:string[];tasks:string[]};
-export function EditorPrototype({ file, nodes, comments, directions, warnings, changes, operations, resolutionCases }: { file: Record<string, string>; nodes: TreeNode[]; comments: MockComment[]; directions:Direction[]; warnings: { level: string; icon: string; title: string; text: string }[]; changes:DraftChange[]; operations:AmendmentOperation[]; resolutionCases:ResolutionCase[] }) {
-  const [selectedId, setSelectedId] = useState(nodes[3].id);
-  const [mode, setMode] = useState<Mode>("structure");
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
-  const [modal, setModal] = useState<"check" | "version" | null>(null);
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef<number | null>(null);
-  const selected = nodes.find((node) => node.id === selectedId) ?? nodes[0];
-  const showInspector = rightOpen && mode !== "compare";
-  useEffect(() => () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); }, []);
-  const notify = (message: string) => { setToast(message); if (toastTimer.current) window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(""), 2600); };
-
-  return <main className="flex h-screen min-h-[680px] flex-col overflow-hidden bg-slate-100">
-    <SampleBanner />
-    <EditorTopbar file={file} onCheck={() => setModal("check")} onVersion={() => setModal("version")} />
-    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
-      <div className="flex gap-1" role="tablist" aria-label="Chế độ hiển thị">
-        {([['structure','Biên tập cấu trúc'],['traditional','Trình bày truyền thống'],['compare','So sánh'],['amendment','Thao tác sửa đổi']] as const).map(([id,label]) => <button key={id} className={`mode-tab ${mode===id?'mode-tab-active':''}`} onClick={() => setMode(id)}>{label}</button>)}
-      </div>
-      <div className="flex gap-2"><button className="icon-button" onClick={() => setLeftOpen(!leftOpen)} aria-pressed={!leftOpen}>☰ Cây</button>{mode!=="compare"&&<button className="icon-button" onClick={() => setRightOpen(!rightOpen)} aria-pressed={!rightOpen}>⚙ Thuộc tính</button>}</div>
-    </div>
-    <div className={`editor-grid min-h-0 flex-1 ${leftOpen?'':'left-closed'} ${showInspector?'':'right-closed'}`}>
-      {leftOpen && <StructureTree nodes={nodes} selectedId={selectedId} onSelect={setSelectedId} onNotify={notify} />}
-      <EditorWorkspace key={mode === "structure" ? selected.id : mode} node={selected} nodes={nodes} mode={mode} changes={changes} operations={operations} onSelect={setSelectedId} onNotify={notify} />
-      {showInspector && <InspectorPanel node={selected} comments={comments} directions={directions} warnings={warnings} resolutionCases={resolutionCases} onNotify={notify} />}
-    </div>
-    <p className="desktop-note">Nguyên mẫu được tối ưu cho màn hình từ 1366 px; một số bảng điều khiển được ẩn trên màn hình nhỏ.</p>
-    {toast && <div className="toast" role="status">{toast}</div>}
-    {modal==='version'&&<VersionCreationDialog onClose={()=>setModal(null)} onNotify={notify}/>} 
-    {modal==='check' && <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-card">
-      <div className="section-heading"><div><p className="eyebrow">Thao tác mô phỏng</p><h2 id="modal-title">{modal==='check'?'Kiểm tra dự thảo':'Tạo phiên bản dự thảo'}</h2></div><button className="icon-button" onClick={() => setModal(null)} aria-label="Đóng">×</button></div>
-      <div className="mt-5 space-y-3"><div className="property-card"><strong>1 lỗi chặn</strong><span>Thời điểm dự kiến áp dụng chưa được xác nhận trong dữ liệu mẫu.</span></div><div className="property-card"><strong>1 nội dung cần xác nhận</strong><span>Tham chiếu nội bộ cần được rà soát.</span></div><p className="text-xs text-slate-500">Kết quả chỉ phục vụ minh họa, không phải kiểm tra pháp lý.</p></div>
-      <div className="mt-6 flex justify-end gap-2"><button className="button button-secondary" onClick={() => setModal(null)}>Hủy</button><button className="button button-primary" onClick={() => { setModal(null); notify('Đã hoàn tất kiểm tra mô phỏng.'); }}>Chạy kiểm tra</button></div>
-    </div></div>}
-  </main>;
-}
+const labels:Record<EditorSaveState["status"],string>={LOADING:"Đang tải…",CLEAN:"Sạch",DIRTY:"Chưa lưu",SAVING:"Đang lưu…",SAVED:"Đã lưu",STALE:"STALE REVISION",VALIDATION_ERROR:"Lỗi validation",AUTH_ERROR:"Lỗi quyền",BACKEND_ERROR:"Backend không khả dụng",UNSUPPORTED:"UNSUPPORTED STRUCTURED OPERATION"};
+export function EditorPrototype(){const[workspace,setWorkspace]=useState<DraftWorkspace|null>(null),[document,setDocument]=useState<LegalDocumentSnapshot|null>(null),[baseline,setBaseline]=useState<LegalDocumentSnapshot|null>(null),[selectedId,setSelectedId]=useState(""),[mode,setMode]=useState<"structure"|"traditional">("structure"),[saveState,setSaveState]=useState<EditorSaveState>({status:"LOADING",revision:0}),[toast,setToast]=useState(""),[leftOpen,setLeftOpen]=useState(true),[rightOpen,setRightOpen]=useState(true);const coordinator=useRef<AutosaveCoordinator|null>(null),timer=useRef<number|null>(null);
+const applyState=useCallback((state:EditorSaveState)=>{setSaveState(state);if(state.status==="SAVED")setBaseline(coordinator.current?.snapshot()??null)},[]);
+const load=useCallback(async()=>{setSaveState(value=>({...value,status:"LOADING"}));try{const value=await loadEditorWorkspace();setWorkspace(value);setDocument(value.document);setBaseline(structuredClone(value.document));setSelectedId(current=>value.document.nodes.some(node=>node.id===current)?current:value.document.nodes[0]?.id??"");coordinator.current=new AutosaveCoordinator(value.document,value.revision,saveEditorWorkspace,applyState);setSaveState({status:"CLEAN",revision:value.revision})}catch(error){const value=error as{code?:string;message?:string};setSaveState({status:value.code==="UNAUTHENTICATED"||value.code==="FORBIDDEN"||value.code==="AUTH_NOT_CONFIGURED"?"AUTH_ERROR":"BACKEND_ERROR",revision:0,error:{code:value.code??"BACKEND_ERROR",message:value.message??"Không tải được workspace."}})}},[applyState]);useEffect(()=>{const id=window.setTimeout(()=>void load(),0);return()=>window.clearTimeout(id)},[load]);
+useEffect(()=>{const warning=(event:BeforeUnloadEvent)=>{if(requiresNavigationWarning(saveState.status)){event.preventDefault();event.returnValue=""}};window.addEventListener("beforeunload",warning);return()=>window.removeEventListener("beforeunload",warning)},[saveState.status]);
+useEffect(()=>()=>{if(timer.current)window.clearTimeout(timer.current)},[]);
+const update=(next:LegalDocumentSnapshot)=>{setDocument(next);coordinator.current?.update(next);if(timer.current)window.clearTimeout(timer.current);timer.current=window.setTimeout(()=>void coordinator.current?.flush(),1500)};
+const manualSave=async()=>{if(timer.current)window.clearTimeout(timer.current);await coordinator.current?.flush()};
+const reapply=async()=>{if(!document)return;const local=structuredClone(document);await load();setDocument(local);coordinator.current?.update(local);setToast("Đã nạp revision máy chủ và reapply bản cục bộ; hãy rà soát rồi Save.")};
+const unsupported=(message:string)=>{setToast(message);setSaveState(value=>({...value,status:"UNSUPPORTED",error:{code:"UNSUPPORTED",message}}))};
+if(!workspace||!document||!baseline)return <main className="flex min-h-screen items-center justify-center bg-slate-100"><section className="card max-w-xl p-6"><h1 className="font-bold">{labels[saveState.status]}</h1><p className="mt-2 text-sm">{saveState.error?.message??"Đang tải workspace PostgreSQL…"}</p>{saveState.status!=="LOADING"&&<button className="button button-primary mt-4" onClick={()=>void load()}>Thử lại</button>}</section></main>;
+const selected=document.nodes.find(node=>node.id===selectedId)??document.nodes[0];const baselineNode=baseline.nodes.find(node=>node.id===selected.id)??selected;const file={draft:`rev ${saveState.revision}`,id:workspace.projectId,branch:workspace.branchId,name:String(document.metadata.title??document.documentTypeCode),ruleset:document.ruleSet.versionCode};return <main className="flex h-screen min-h-[680px] flex-col overflow-hidden bg-slate-100"><EditorTopbar file={file} onCheck={()=>setToast("Validation server sẽ chạy khi Save.")} onVersion={()=>setToast("Tạo DraftVersion chỉ thực hiện qua Step 4 finalization.")}/><div className="flex items-center justify-between border-b bg-white px-3 py-2"><div className="flex gap-1">{(["structure","traditional"]as const).map(value=><button key={value} className={`mode-tab ${mode===value?"mode-tab-active":""}`} onClick={()=>setMode(value)}>{value==="structure"?"Biên tập cấu trúc":"Trình bày truyền thống"}</button>)}</div><div className="flex items-center gap-2"><span className={`badge ${saveState.status==="SAVED"||saveState.status==="CLEAN"?"badge-blue":saveState.status==="DIRTY"||saveState.status==="SAVING"?"badge-amber":"badge-red"}`}>{labels[saveState.status]}</span><button className="button button-primary" disabled={saveState.status==="SAVING"||saveState.status==="STALE"} onClick={()=>void manualSave()}>Lưu</button><button className="icon-button" onClick={()=>setLeftOpen(!leftOpen)}>☰ Cây</button><button className="icon-button" onClick={()=>setRightOpen(!rightOpen)}>⚙ Thuộc tính</button></div></div>{saveState.error&&<div className="border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900"><b>{labels[saveState.status]}:</b> {saveState.error.message}{saveState.status==="STALE"&&<span> · server revision {saveState.serverRevision??"không rõ"} <button className="tiny-button ml-2" onClick={()=>void load()}>Reload server</button><button className="tiny-button ml-2" onClick={()=>void reapply()}>Reapply bản cục bộ</button></span>}</div>}<div className={`editor-grid min-h-0 flex-1 ${leftOpen?"":"left-closed"} ${rightOpen?"":"right-closed"}`}>{leftOpen&&<StructureTree nodes={document.nodes} selectedId={selected.id} onSelect={setSelectedId} onUnsupported={unsupported}/>}<EditorWorkspace workspace={{...workspace,document,revision:saveState.revision}} node={selected} baselineContent={baselineNode.content} mode={mode} onContent={content=>update(replaceNodeContent(document,selected.id,content))} onUnsupported={unsupported} onNotify={setToast}/>{rightOpen&&<InspectorPanel node={selected} workspace={{...workspace,document,revision:saveState.revision}}/>}</div>{toast&&<div className="toast" role="status">{toast}</div>}</main>}
