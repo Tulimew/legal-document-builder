@@ -1,6 +1,8 @@
 import type {
+  LegalContentBlock,
   LegalDocumentSnapshot,
   LegalNode,
+  ParagraphBlock,
   SaveWorkspaceCommand,
 } from "@legal-document-builder/contracts";
 
@@ -8,6 +10,7 @@ import { AppError } from "../errors";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CONTRACT_VERSIONS = new Set(["1.0", "1.1"]);
+const INLINE_MARKS = new Set(["BOLD", "ITALIC", "UNDERLINE", "SUPERSCRIPT", "SUBSCRIPT"]);
 
 function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -28,6 +31,29 @@ function requiredUuid(value: unknown, field: string): string {
   return text;
 }
 
+function optionalUuid(value: unknown, field: string): void { if (value !== undefined) requiredUuid(value, field); }
+function jsonObject(value: unknown, field: string): void { if (!object(value)) throw new AppError("INVALID_DOCUMENT", `${field} phải là object JSON.`); }
+function paragraph(value: unknown, field: string): asserts value is ParagraphBlock {
+  if (!object(value) || value.kind !== "PARAGRAPH" || !Array.isArray(value.spans)) throw new AppError("INVALID_DOCUMENT", `${field} phải là PARAGRAPH có spans.`);
+  value.spans.forEach((span, index) => {
+    const name=`${field}.spans[${index}]`;if(!object(span)||typeof span.text!=="string")throw new AppError("INVALID_DOCUMENT",`${name}.text phải là chuỗi.`);
+    if(span.marks!==undefined&&(!Array.isArray(span.marks)||span.marks.some(mark=>typeof mark!=="string"||!INLINE_MARKS.has(mark))))throw new AppError("INVALID_DOCUMENT",`${name}.marks không hợp lệ.`);
+    optionalUuid(span.footnoteId,`${name}.footnoteId`);
+    if(span.reference!==undefined){if(!object(span.reference))throw new AppError("INVALID_DOCUMENT",`${name}.reference không hợp lệ.`);if(span.reference.kind==="INTERNAL_REFERENCE"){requiredUuid(span.reference.targetNodeId,`${name}.reference.targetNodeId`);requiredString(span.reference.referenceType,`${name}.reference.referenceType`)}else if(span.reference.kind==="EXTERNAL_REFERENCE"){requiredUuid(span.reference.sourceDocumentId,`${name}.reference.sourceDocumentId`);requiredString(span.reference.verificationStatus,`${name}.reference.verificationStatus`)}else throw new AppError("INVALID_DOCUMENT",`${name}.reference.kind không được hỗ trợ.`)}
+  });
+}
+function validateContent(content: unknown, field: string): asserts content is LegalContentBlock[] {
+  if(!Array.isArray(content))throw new AppError("INVALID_DOCUMENT",`${field} phải là mảng.`);const ids=new Set<string>();
+  const unique=(value:unknown,name:string)=>{const id=requiredUuid(value,name);if(ids.has(id))throw new AppError("INVALID_DOCUMENT",`${name} bị trùng.`);ids.add(id)};
+  content.forEach((block,index)=>{const name=`${field}[${index}]`;if(!object(block)||typeof block.kind!=="string")throw new AppError("INVALID_DOCUMENT",`${name} không hợp lệ.`);
+    if(block.kind==="PARAGRAPH")return paragraph(block,name);
+    if(block.kind==="LIST"){requiredString(block.styleCode,`${name}.styleCode`);if(!Array.isArray(block.items))throw new AppError("INVALID_DOCUMENT",`${name}.items phải là mảng.`);block.items.forEach((item,i)=>{if(!object(item))throw new AppError("INVALID_DOCUMENT",`${name}.items[${i}] không hợp lệ.`);unique(item.id,`${name}.items[${i}].id`);if(!Array.isArray(item.blocks))throw new AppError("INVALID_DOCUMENT",`${name}.items[${i}].blocks phải là mảng.`);item.blocks.forEach((p,j)=>paragraph(p,`${name}.items[${i}].blocks[${j}]`))});return}
+    if(block.kind==="TABLE"){optionalUuid(block.tableId,`${name}.tableId`);if(block.tableId)unique(block.tableId,`${name}.tableId`);if(block.metadata!==undefined)jsonObject(block.metadata,`${name}.metadata`);if(block.caption!==undefined){if(!Array.isArray(block.caption))throw new AppError("INVALID_DOCUMENT",`${name}.caption phải là mảng.`);block.caption.forEach((p,i)=>paragraph(p,`${name}.caption[${i}]`))}if(!Array.isArray(block.rows))throw new AppError("INVALID_DOCUMENT",`${name}.rows phải là mảng.`);block.rows.forEach((row,r)=>{if(!object(row)||!Array.isArray(row.cells))throw new AppError("INVALID_DOCUMENT",`${name}.rows[${r}] không hợp lệ.`);unique(row.id,`${name}.rows[${r}].id`);row.cells.forEach((cell,c)=>{if(!object(cell)||!Array.isArray(cell.blocks))throw new AppError("INVALID_DOCUMENT",`${name}.rows[${r}].cells[${c}] không hợp lệ.`);unique(cell.id,`${name}.rows[${r}].cells[${c}].id`);cell.blocks.forEach((p,i)=>paragraph(p,`${name}.rows[${r}].cells[${c}].blocks[${i}]`))})});return}
+    if(block.kind==="FIGURE"){unique(block.figureId,`${name}.figureId`);if(!object(block.asset))throw new AppError("INVALID_DOCUMENT",`${name}.asset không hợp lệ.`);requiredUuid(block.asset.assetId,`${name}.asset.assetId`);requiredUuid(block.asset.assetVersionId,`${name}.asset.assetVersionId`);requiredString(block.asset.mediaType,`${name}.asset.mediaType`);if(!Number.isSafeInteger(block.asset.byteSize)||Number(block.asset.byteSize)<0)throw new AppError("INVALID_DOCUMENT",`${name}.asset.byteSize không hợp lệ.`);if(!object(block.asset.checksum)||block.asset.checksum.algorithm!=="SHA-256"||typeof block.asset.checksum.value!=="string")throw new AppError("INVALID_DOCUMENT",`${name}.asset.checksum không hợp lệ.`);requiredString(block.alternativeText,`${name}.alternativeText`);requiredString(block.verificationStatus,`${name}.verificationStatus`);requiredString(block.displayRoleCode,`${name}.displayRoleCode`);jsonObject(block.metadata,`${name}.metadata`);if(block.caption!==undefined){if(!Array.isArray(block.caption))throw new AppError("INVALID_DOCUMENT",`${name}.caption phải là mảng.`);block.caption.forEach((p,i)=>paragraph(p,`${name}.caption[${i}]`))}return}
+    throw new AppError("INVALID_DOCUMENT",`UNSUPPORTED STRUCTURED OPERATION: ${name}.kind=${block.kind}.`);
+  });
+}
+
 function validateNodeShape(value: unknown, index: number): asserts value is LegalNode {
   if (!object(value)) throw new AppError("INVALID_DOCUMENT", `Node ${index} không hợp lệ.`);
   requiredUuid(value.id, `document.nodes[${index}].id`);
@@ -35,7 +61,7 @@ function validateNodeShape(value: unknown, index: number): asserts value is Lega
   if (value.parentNodeId !== null) requiredUuid(value.parentNodeId, `document.nodes[${index}].parentNodeId`);
   requiredString(value.orderKey, `document.nodes[${index}].orderKey`);
   requiredString(value.lifecycleStatus, `document.nodes[${index}].lifecycleStatus`);
-  if (!Array.isArray(value.content)) throw new AppError("INVALID_DOCUMENT", `Nội dung node ${index} phải là mảng.`);
+  validateContent(value.content, `document.nodes[${index}].content`);
   if (!object(value.metadata)) throw new AppError("INVALID_DOCUMENT", `Metadata node ${index} phải là object.`);
 }
 
