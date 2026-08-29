@@ -1,6 +1,7 @@
 export * from "./asset";
 export * from "./amendment";
 export * from "./common";
+export * from "./comparison";
 export * from "./drafting";
 export * from "./legal-content";
 export * from "./review";
