@@ -1,3 +1,3 @@
-import { ComparisonExplanationWorkbench } from "@/components/editor/comparison-explanation-workbench";
+import { PersistentComparisonWorkbench } from "@/components/editor/persistent-comparison-workbench";
 
-export default function DraftComparisonExplanationPage() { return <ComparisonExplanationWorkbench />; }
+export default function DraftComparisonPage() { return <PersistentComparisonWorkbench />; }
