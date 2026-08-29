@@ -44,6 +44,11 @@ export interface DraftBranch {
   closedReason?: string;
 }
 
+export interface DraftBranchSummary extends DraftBranch { workspaceId:EntityId; workspaceRevision:RevisionNumber; headVersionId?:EntityId; headVersionCode?:string }
+export interface CreateDraftBranchRequest { contractVersion:ContractVersion; code:string; name:string; purpose:string; sourceVersionId:EntityId; correlationId:string }
+export interface CreateDraftBranchResult { contractVersion:ContractVersion; branch:DraftBranchSummary; sourceVersionId:EntityId }
+export interface CloseDraftBranchRequest { contractVersion:ContractVersion; status:"CLOSED"|"MERGED"; reason:string; correlationId:string }
+
 export interface DraftWorkspace {
   contractVersion: ContractVersion;
   id: EntityId;

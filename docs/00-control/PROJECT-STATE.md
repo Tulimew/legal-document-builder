@@ -1,12 +1,12 @@
 # Project State
 
 - **Current milestone:** M5 — Branch, Fork, Merge & Conflict Resolution (scope gate)
-- **Current phase:** Proposed scope; implementation not started
+- **Current phase:** Phase 1 complete; Phase 2 next
 - **Main baseline:** `556823cc8cc64a27484890d46f6b45a30811deb3`
-- **Branch:** `codex/m5-scope-gate`
-- **Migrations:** `0001`–`0014`; no M4 migration
-- **Test count:** 87/87 PASS
-- **Completed capabilities:** M4 CLOSED; persistent editor, real comparison, unified provenance and live UI are on `main`
-- **Remaining capabilities:** M5 branch lifecycle, fork, three-way analysis, persistent conflicts, atomic merge and live graph UI (not approved/implemented yet)
+- **Branch:** `codex/m5-branch-fork-merge`
+- **Migrations:** `0001`–`0015`; M5 branch/merge permissions added
+- **Test count:** 93/93 PASS
+- **Completed capabilities:** M4 CLOSED; M5 transactional branch lifecycle/fork with source isolation and no false branch head
+- **Remaining capabilities:** M5 three-way analysis, persistent conflicts, atomic merge and live graph UI
 - **Open blockers:** none
 - **Last successful build:** M4 merge validation on `main`: 87/87 tests, lint/build/diff-check PASS
