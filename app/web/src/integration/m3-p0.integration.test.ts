@@ -60,7 +60,7 @@ test("P0 M3 chạy chuỗi nghiệp vụ thật trên PostgreSQL development",as
   assert.ok(workspaceNode,"Kết luận phải điền nội dung vào workspace thật.");
   const finalText=`Nội dung đã hoàn thiện và chốt tại M3 ${suffix}.`;
   const proposalActor=await authorizeProject(pool,{userId},projectId,"STEP4_CHANGE_CREATE");
-  const proposal=await step4.create(projectId,workspaceId,{contractVersion:"1.1",legalNodeId:target.legal_node_id,location:`Điều kiểm thử ${suffix}`,beforeState:{content:workspaceNode.content},afterState:{content:finalText},sourceType:"MEETING_CONCLUSION",sourceReference:comment.id,reason:"Thực hiện kết luận fixture nghiệm thu M3.",authorityBasis:"Kết luận của người chủ trì fixture M3.",changesMeetingConclusion:false,correlationId:`m3-proposal-${suffix}`},proposalActor);
+  const proposal=await step4.create(projectId,workspaceId,{contractVersion:"1.1",legalNodeId:target.legal_node_id,location:`Điều kiểm thử ${suffix}`,beforeState:{content:[{kind:"PARAGRAPH",spans:[{text:workspaceNode.content}]}]},afterState:{content:[{kind:"PARAGRAPH",spans:[{text:finalText}]}]},sourceType:"MEETING_CONCLUSION",sourceReference:comment.id,reason:"Thực hiện kết luận fixture nghiệm thu M3.",authorityBasis:"Kết luận của người chủ trì fixture M3.",changesMeetingConclusion:false,correlationId:`m3-proposal-${suffix}`},proposalActor);
   const decisionActor=await authorizeProject(pool,{userId},projectId,"STEP4_CHANGE_DECIDE");
   await step4.decide(projectId,proposal.id,{contractVersion:"1.1",decisionType:"APPROVE",reason:"Đủ điều kiện chốt trong fixture M3.",authorityBasis:"Biên bản nghiệm thu kỹ thuật P0.",correlationId:`m3-approve-${suffix}`},decisionActor);
   const readiness=await step4.readiness(workspaceId);
