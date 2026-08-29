@@ -7,7 +7,7 @@ import type {
   RevisionNumber,
   VersionedConfigRef,
 } from "./common";
-import type { LegalDocumentSnapshot, LegalNode } from "./legal-content";
+import type { LegalContentBlock, LegalDocumentSnapshot, LegalNode } from "./legal-content";
 
 export type DraftBranchStatus = "ACTIVE" | "CLOSED" | "MERGED";
 export type CheckpointKind = "AUTOMATIC" | "MANUAL" | "PRE_VERSION" | "PRE_RESTORE" | "PRE_MERGE";
@@ -20,9 +20,10 @@ export type DraftNodeChangeType =
   | "DRAFT_MOVE_AND_CONTENT_CHANGE";
 export type Step4ChangeSourceType="MEETING_CONCLUSION"|"TECHNICAL_EDIT"|"DRAFTING_TEAM_INITIATIVE"|"NEW_DIRECTION";
 export type Step4ChangeDecisionType="APPROVE"|"REJECT"|"REQUEST_REVISION";
+export interface Step4StructuredNodeState{content:LegalContentBlock[]}
 export interface Step4ChangeDecision{contractVersion:ContractVersion;id:EntityId;proposalId:EntityId;sequence:number;decisionType:Step4ChangeDecisionType;reason:string;authorityBasis:string;decidedAt:IsoDateTime;decidedBy:ActorRef;supersedesDecisionId?:EntityId}
-export interface Step4ChangeProposal{contractVersion:ContractVersion;id:EntityId;projectId:EntityId;workspaceId:EntityId;legalNodeId:EntityId;location:string;beforeState:Record<string,unknown>;afterState:Record<string,unknown>;sourceType:Step4ChangeSourceType;sourceReference?:string;reason:string;authorityBasis?:string;changesMeetingConclusion:boolean;status:"PENDING_APPROVAL"|"APPROVED"|"REJECTED"|"REVISION_REQUESTED";recordedAt:IsoDateTime;recordedBy:ActorRef;latestDecision?:Step4ChangeDecision}
-export interface CreateStep4ChangeProposalRequest{contractVersion:ContractVersion;legalNodeId:EntityId;location:string;beforeState:Record<string,unknown>;afterState:Record<string,unknown>;sourceType:Step4ChangeSourceType;sourceReference?:string;reason:string;authorityBasis?:string;changesMeetingConclusion:boolean;correlationId:string}
+export interface Step4ChangeProposal{contractVersion:ContractVersion;id:EntityId;projectId:EntityId;workspaceId:EntityId;legalNodeId:EntityId;location:string;beforeState:Step4StructuredNodeState;afterState:Step4StructuredNodeState;sourceType:Step4ChangeSourceType;sourceReference?:string;reason:string;authorityBasis?:string;changesMeetingConclusion:boolean;status:"PENDING_APPROVAL"|"APPROVED"|"REJECTED"|"REVISION_REQUESTED";recordedAt:IsoDateTime;recordedBy:ActorRef;latestDecision?:Step4ChangeDecision}
+export interface CreateStep4ChangeProposalRequest{contractVersion:ContractVersion;legalNodeId:EntityId;location:string;beforeState:Step4StructuredNodeState;afterState:Step4StructuredNodeState;sourceType:Step4ChangeSourceType;sourceReference?:string;reason:string;authorityBasis?:string;changesMeetingConclusion:boolean;correlationId:string}
 export interface DecideStep4ChangeProposalRequest{contractVersion:ContractVersion;decisionType:Step4ChangeDecisionType;reason:string;authorityBasis:string;correlationId:string}
 export interface Step4FinalizationReadiness{contractVersion:ContractVersion;workspaceId:EntityId;workspaceRevision:RevisionNumber;parentVersionId:EntityId;parentVersionCode:string;approvedProposalCount:number;pendingProposalCount:number;revisionRequestedCount:number;conflicts:Array<{proposalId:EntityId;legalNodeId:EntityId;message:string}>;ready:boolean}
 export interface FinalizeStep4Request{contractVersion:ContractVersion;expectedRevision:RevisionNumber;versionCode:string;versionName:string;completionReport:string;authorityBasis:string;correlationId:string}
