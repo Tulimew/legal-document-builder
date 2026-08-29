@@ -1,0 +1,6 @@
+import type {ContractVersion,EntityId,RevisionNumber} from "./common";import type {LegalDocumentSnapshot,LegalNode} from "./legal-content";
+export type MergeAnalysisDisposition="AUTO_APPLICABLE_THEIRS"|"KEEP_OURS"|"SAME_CHANGE"|"CONFLICT";export type MergeConflictKind="CONTENT"|"DELETE_MODIFY"|"ADD_ADD"|"MOVE_MOVE"|"REPARENT_DELETE"|"ORDER_COLLISION"|"REFERENCE_INTEGRITY"|"TREE_INVARIANT";
+export interface ThreeWayNodeAnalysis{legalNodeId:EntityId;disposition:MergeAnalysisDisposition;base?:LegalNode;ours?:LegalNode;theirs?:LegalNode;result?:LegalNode;conflictKind?:MergeConflictKind}
+export interface MergeBaseCandidates{candidates:EntityId[];selectedBaseVersionId?:EntityId}
+export interface MergeAnalysisRequest{contractVersion:ContractVersion;targetBranchId:EntityId;oursVersionId:EntityId;theirsVersionId:EntityId;selectedBaseVersionId?:EntityId;expectedTargetWorkspaceRevision:RevisionNumber}
+export interface MergeAnalysisResult{contractVersion:ContractVersion;baseVersionId:EntityId;oursVersionId:EntityId;theirsVersionId:EntityId;targetBranchId:EntityId;targetWorkspaceId:EntityId;targetWorkspaceRevision:RevisionNumber;analysisAlgorithmCode:"LEGAL_NODE_THREE_WAY";analysisAlgorithmVersion:"1.0";inputChecksum:string;previewChecksum:string;nodes:ThreeWayNodeAnalysis[];preview?:LegalDocumentSnapshot;ready:boolean}
