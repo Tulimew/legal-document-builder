@@ -10,6 +10,7 @@ import type {
 } from "@legal-document-builder/contracts";
 import type { Pool, PoolClient } from "pg";
 
+import { canonicalJson } from "./canonical-json";
 import { inTransaction } from "./database";
 import { AppError } from "./errors";
 
@@ -155,8 +156,7 @@ export class PostgresWorkspaceRepository {
       const synchronizedAt = databaseClock.rows[0].synchronized_at;
       const nextRevision = actualRevision + 1;
       await client.query("SET CONSTRAINTS ALL DEFERRED");
-      await client.query("DELETE FROM legal_builder.workspace_legal_node WHERE workspace_id = $1", [command.workspaceId]);
-      await insertNodes(client, command.workspaceId, command.document.nodes, command.actor, synchronizedAt);
+      await reconcileNodes(client, command.workspaceId, command.document.nodes, command.actor, synchronizedAt);
       await client.query(
         `UPDATE legal_builder.draft_workspace
             SET revision = $2,
@@ -200,23 +200,89 @@ export class PostgresWorkspaceRepository {
   }
 }
 
-async function insertNodes(
+function comparableNode(node: LegalNode): object {
+  return {
+    id: node.id,
+    nodeTypeCode: node.nodeTypeCode,
+    parentNodeId: node.parentNodeId,
+    orderKey: node.orderKey,
+    title: node.title ?? null,
+    content: node.content,
+    metadata: node.metadata,
+    displayNumber: node.displayNumber ?? null,
+    displayNumberLocked: node.displayNumberLocked ?? false,
+    lifecycleStatus: node.lifecycleStatus,
+  };
+}
+
+async function reconcileNodes(
   client: PoolClient,
   workspaceId: string,
   nodes: LegalNode[],
   actor: ActorRef,
   updatedAt: Date,
 ): Promise<void> {
-  for (const node of nodes) {
+  const persistedResult = await client.query<NodeRow>(
+    "SELECT * FROM legal_builder.workspace_legal_node WHERE workspace_id=$1",
+    [workspaceId],
+  );
+  const persisted = new Map(persistedResult.rows.map((row) => {
+    const node = nodeFromRow(row);
+    return [node.id, node] as const;
+  }));
+  const incoming = new Map(nodes.map((node) => [node.id, node] as const));
+  const deletedIds = [...persisted.keys()].filter((id) => !incoming.has(id));
+  const changed = nodes.filter((node) => {
+    const current = persisted.get(node.id);
+    return !current || canonicalJson(comparableNode(current)) !== canonicalJson(comparableNode(node));
+  });
+
+  if (deletedIds.length) {
+    const references = await client.query<{ legal_node_id: string }>(
+      `SELECT DISTINCT legal_node_id
+         FROM legal_builder.step4_change_proposal
+        WHERE workspace_id=$1 AND legal_node_id=ANY($2::uuid[])`,
+      [workspaceId, deletedIds],
+    );
+    if (references.rowCount) {
+      throw new AppError("REVISION_CONFLICT", "Không thể xóa nút đang được phiếu thay đổi Bước 4 tham chiếu.", {
+        referencedNodeIds: references.rows.map((row) => row.legal_node_id),
+      });
+    }
+    await client.query(
+      "DELETE FROM legal_builder.workspace_legal_node WHERE workspace_id=$1 AND legal_node_id=ANY($2::uuid[])",
+      [workspaceId, deletedIds],
+    );
+  }
+
+  if (changed.length) {
+    const records = changed.map((node) => ({
+      legal_node_id: node.id,
+      node_type_code: node.nodeTypeCode,
+      parent_node_id: node.parentNodeId,
+      order_key: node.orderKey,
+      title: node.title ?? null,
+      content_blocks: node.content,
+      metadata: node.metadata,
+      display_number: node.displayNumber ?? null,
+      display_number_locked: node.displayNumberLocked ?? false,
+      lifecycle_status_code: node.lifecycleStatus,
+    }));
     await client.query(
       `INSERT INTO legal_builder.workspace_legal_node (
-         workspace_id, legal_node_id, node_type_code, parent_node_id, order_key,
-         title, content_blocks, metadata, display_number, display_number_locked,
-         lifecycle_status_code, updated_at, updated_by_user_id
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13)`,
-      [workspaceId, node.id, node.nodeTypeCode, node.parentNodeId, node.orderKey, node.title ?? null,
-        JSON.stringify(node.content), JSON.stringify(node.metadata), node.displayNumber ?? null,
-        node.displayNumberLocked ?? false, node.lifecycleStatus, updatedAt, actor.userId],
+         workspace_id,legal_node_id,node_type_code,parent_node_id,order_key,title,content_blocks,metadata,
+         display_number,display_number_locked,lifecycle_status_code,updated_at,updated_by_user_id)
+       SELECT $1,x.legal_node_id,x.node_type_code,x.parent_node_id,x.order_key,x.title,x.content_blocks,x.metadata,
+              x.display_number,x.display_number_locked,x.lifecycle_status_code,$3,$4
+         FROM jsonb_to_recordset($2::jsonb) AS x(
+           legal_node_id uuid,node_type_code text,parent_node_id uuid,order_key text,title text,
+           content_blocks jsonb,metadata jsonb,display_number text,display_number_locked boolean,lifecycle_status_code text)
+       ON CONFLICT(workspace_id,legal_node_id) DO UPDATE SET
+         node_type_code=excluded.node_type_code,parent_node_id=excluded.parent_node_id,order_key=excluded.order_key,
+         title=excluded.title,content_blocks=excluded.content_blocks,metadata=excluded.metadata,
+         display_number=excluded.display_number,display_number_locked=excluded.display_number_locked,
+         lifecycle_status_code=excluded.lifecycle_status_code,updated_at=excluded.updated_at,updated_by_user_id=excluded.updated_by_user_id`,
+      [workspaceId, canonicalJson(records), updatedAt, actor.userId],
     );
   }
 }
