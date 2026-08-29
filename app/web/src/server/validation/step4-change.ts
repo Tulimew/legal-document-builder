@@ -1,5 +1,6 @@
 import type { CreateStep4ChangeProposalRequest, DecideStep4ChangeProposalRequest, FinalizeStep4Request, LegalContentBlock, Step4ChangeSourceType, Step4StructuredNodeState } from "@legal-document-builder/contracts";
 
+import { canonicalJson } from "../canonical-json";
 import { AppError } from "../errors";
 import { assertUuid } from "./workspace";
 
@@ -55,7 +56,7 @@ export function parseCreateStep4Change(value: unknown): CreateStep4ChangeProposa
   assertUuid(legalNodeId, "legalNodeId");
   const beforeState = structuredState(item.beforeState, "beforeState"), afterState = structuredState(item.afterState, "afterState"), sourceType = item.sourceType as Step4ChangeSourceType;
   if (!sources.includes(sourceType)) throw new AppError("INVALID_REQUEST", "sourceType không được hỗ trợ.");
-  if (JSON.stringify(beforeState) === JSON.stringify(afterState)) throw new AppError("INVALID_REQUEST", "Nội dung trước và sau không được giống nhau.");
+  if (canonicalJson(beforeState) === canonicalJson(afterState)) throw new AppError("INVALID_REQUEST", "Nội dung trước và sau không được giống nhau.");
   const sourceReference = typeof item.sourceReference === "string" ? item.sourceReference.trim() : "", authorityBasis = typeof item.authorityBasis === "string" ? item.authorityBasis.trim() : "", changesMeetingConclusion = item.changesMeetingConclusion === true;
   if ((sourceType === "MEETING_CONCLUSION" || sourceType === "NEW_DIRECTION") && !sourceReference) throw new AppError("INVALID_REQUEST", "Phải ghi số hiệu hoặc mã nguồn phát sinh.");
   if ((sourceType === "DRAFTING_TEAM_INITIATIVE" || sourceType === "NEW_DIRECTION" || changesMeetingConclusion) && !authorityBasis) throw new AppError("INVALID_REQUEST", "Phải ghi căn cứ thẩm quyền.");
