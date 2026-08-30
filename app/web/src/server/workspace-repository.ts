@@ -224,6 +224,7 @@ export async function reconcileWorkspaceNodes(
   actor: ActorRef,
   updatedAt: Date,
 ): Promise<void> {
+  await new PostgresRuleSetRepository(client).validateWorkspaceNodes(workspaceId, nodes);
   const persistedResult = await client.query<NodeRow>(
     "SELECT * FROM legal_builder.workspace_legal_node WHERE workspace_id=$1",
     [workspaceId],
