@@ -13,6 +13,7 @@ import type { Pool, PoolClient } from "pg";
 import { canonicalJson } from "./canonical-json";
 import { inTransaction } from "./database";
 import { AppError } from "./errors";
+import { PostgresRuleSetRepository } from "./ruleset-repository";
 
 interface WorkspaceRow {
   id: string;
@@ -151,6 +152,7 @@ export class PostgresWorkspaceRepository {
       if (row.document_type_code !== command.document.documentTypeCode || row.relation_type_code !== command.document.relationType) {
         throw new AppError("INVALID_DOCUMENT", "Loại hoặc quan hệ của document không khớp hồ sơ.");
       }
+      await new PostgresRuleSetRepository(client).validateDocument(command.document.ruleSet, command.document);
 
       const databaseClock = await client.query<{ synchronized_at: Date }>("SELECT clock_timestamp() AS synchronized_at");
       const synchronizedAt = databaseClock.rows[0].synchronized_at;
@@ -222,6 +224,7 @@ export async function reconcileWorkspaceNodes(
   actor: ActorRef,
   updatedAt: Date,
 ): Promise<void> {
+  await new PostgresRuleSetRepository(client).validateWorkspaceNodes(workspaceId, nodes);
   const persistedResult = await client.query<NodeRow>(
     "SELECT * FROM legal_builder.workspace_legal_node WHERE workspace_id=$1",
     [workspaceId],

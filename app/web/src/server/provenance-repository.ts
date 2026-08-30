@@ -34,8 +34,9 @@ export class PostgresProvenanceRepository {
       const entity=ref("DRAFT_LEGAL_NODE_CHANGE",String(change.id));
       const edges:ProvenanceEdge[]=[{from:entity,to:ref("DRAFT_VERSION",String(change.effective_version_id)),relation:"EFFECTIVE_IN",status:"VERIFIED"}];
       for(const basis of bases.filter(row=>row.change_id===change.id)) edges.push({from:entity,to:ref(String(basis.source_type_code),String(basis.source_id),basis.label??undefined),relation:"HAS_BASIS",status:"VERIFIED"});
-      const final=finals.find(row=>row.legal_change_id===change.id);
+      const final=finals.find(row=>row.legal_change_id===change.id),authoringBasis=bases.find(row=>row.change_id===change.id&&row.source_type_code==="AUTHORING_FINALIZATION");
       if(final){edges.push({from:entity,to:ref("STEP4_CHANGE_PROPOSAL",final.proposal_id),relation:"FINALIZED_FROM",status:"VERIFIED"});if(final.source_reference)edges.push({from:ref("STEP4_CHANGE_PROPOSAL",final.proposal_id),relation:"REFERENCES_SOURCE",status:"UNVERIFIED_REFERENCE"});}
+      else if(authoringBasis)edges.push({from:entity,to:ref("AUTHORING_FINALIZATION",String(authoringBasis.source_id)),relation:"FINALIZED_FROM",status:"VERIFIED"});
       else edges.push({from:entity,relation:"FINALIZED_FROM",status:"MISSING"});
       for(const link of resolutions.filter(row=>row.change_id===change.id)) edges.push(canViewReview?{from:ref("COMMENT_RESOLUTION",link.resolution_id),to:ref("COMMENT",link.comment_id),relation:"RESOLVES",status:"VERIFIED"}:{from:entity,relation:"HAS_REVIEW_SOURCE",status:"REDACTED"});
       return {entity,occurredAt:new Date(String(change.decided_at)).toISOString(),actor:{userId:String(change.performed_by_user_id)},summary:String(change.reason),edges};

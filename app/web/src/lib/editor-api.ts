@@ -1,5 +1,6 @@
-import type { DraftWorkspace, LegalDocumentSnapshot, SaveWorkspaceResult } from "@legal-document-builder/contracts";
+import type { AuthoringFinalizationResult, DraftWorkspace, FinalizeAuthoringRequest, LegalDocumentSnapshot, SaveWorkspaceResult } from "@legal-document-builder/contracts";
 import type { EditorSaveError, SaveAcknowledgement, SaveSnapshot } from "./editor-state";
+import type { AvailableAssetVersion } from "@/server/asset-repository";
 
 export const editorWorkspaceId=process.env.NEXT_PUBLIC_SAMPLE_WORKSPACE_ID;
 const userId=process.env.NEXT_PUBLIC_DEVELOPMENT_USER_ID;
@@ -9,3 +10,5 @@ async function body(response:Response){const value=await response.json();if(!res
 export async function loadEditorWorkspace():Promise<DraftWorkspace>{if(!editorWorkspaceId)throw{code:"AUTH_NOT_CONFIGURED",message:"NEXT_PUBLIC_SAMPLE_WORKSPACE_ID chưa được cấu hình; editor không dùng dữ liệu mẫu fallback."};return body(await fetch(`/api/v1/workspaces/${editorWorkspaceId}`,{headers:editorHeaders()}))}
 export async function saveEditorWorkspace(snapshot:SaveSnapshot):Promise<SaveAcknowledgement>{if(!editorWorkspaceId)throw{code:"AUTH_NOT_CONFIGURED",message:"Workspace chưa được cấu hình."};const data=await body(await fetch(`/api/v1/workspaces/${editorWorkspaceId}`,{method:"PUT",headers:editorHeaders(true),body:JSON.stringify({contractVersion:snapshot.document.contractVersion,expectedRevision:snapshot.expectedRevision,document:snapshot.document,correlationId:crypto.randomUUID()})})) as SaveWorkspaceResult;return{revision:data.revision,synchronizedAt:data.synchronizedAt}}
 export function cloneDocument(document:LegalDocumentSnapshot){return structuredClone(document)}
+export async function loadAvailableAssets(projectId:string):Promise<AvailableAssetVersion[]>{return body(await fetch(`/api/v1/projects/${projectId}/assets`,{headers:editorHeaders()}))}
+export async function finalizeAuthoring(workspaceId:string,request:FinalizeAuthoringRequest):Promise<AuthoringFinalizationResult>{return body(await fetch(`/api/v1/workspaces/${workspaceId}/authoring-finalization`,{method:"POST",headers:editorHeaders(true),body:JSON.stringify(request)}))}
