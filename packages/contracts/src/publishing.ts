@@ -7,7 +7,7 @@ export type GeneratedDocumentStatus="AVAILABLE"|"FAILED_VERIFICATION"|"ORPHANED"
 export type ReleasePackageStatus="DRAFT"|"SEALED"|"SUPERSEDED";
 
 export interface PublishingTemplateVersion { contractVersion:ContractVersion;id:EntityId;definitionId:EntityId;code:string;name:string;versionCode:string;status:PublishingTemplateStatus;rendererKind:string;schemaVersion:string;configuration:Record<string,JsonValue>;provenance:Record<string,JsonValue>;createdAt:IsoDateTime }
-export interface CreatePublishingJobRequest { contractVersion:ContractVersion;artifactKind:PublishingArtifactKind;sourceDraftVersionId:EntityId;templateVersionId:EntityId;idempotencyKey:string;correlationId:string }
+export interface CreatePublishingJobRequest { contractVersion:ContractVersion;artifactKind:PublishingArtifactKind;sourceDraftVersionId:EntityId;comparisonBaseVersionId?:EntityId;templateVersionId:EntityId;idempotencyKey:string;correlationId:string }
 export interface PublishingJob { contractVersion:ContractVersion;id:EntityId;projectId:EntityId;artifactKind:PublishingArtifactKind;sourceDraftVersionId:EntityId;templateVersionId:EntityId;inputFingerprint:string;status:PublishingJobStatus;attempts:number;maxAttempts:number;requestedAt:IsoDateTime;requestedBy:ActorRef;generatedDocumentId?:EntityId }
 export interface GeneratedDocument { contractVersion:ContractVersion;id:EntityId;projectId:EntityId;jobId:EntityId;artifactKind:PublishingArtifactKind;sourceDraftVersionId:EntityId;templateVersionId:EntityId;rendererVersion:string;mediaType:string;byteSize:number;checksumSha256:string;status:GeneratedDocumentStatus;createdAt:IsoDateTime }
 export interface CreateReleasePackageRequest { contractVersion:ContractVersion;code:string;name:string;purpose:string;correlationId:string }
