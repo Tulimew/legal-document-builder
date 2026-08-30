@@ -28,6 +28,8 @@ export interface DecideStep4ChangeProposalRequest{contractVersion:ContractVersio
 export interface Step4FinalizationReadiness{contractVersion:ContractVersion;workspaceId:EntityId;workspaceRevision:RevisionNumber;parentVersionId:EntityId;parentVersionCode:string;approvedProposalCount:number;pendingProposalCount:number;revisionRequestedCount:number;conflicts:Array<{proposalId:EntityId;legalNodeId:EntityId;message:string}>;ready:boolean}
 export interface FinalizeStep4Request{contractVersion:ContractVersion;expectedRevision:RevisionNumber;versionCode:string;versionName:string;completionReport:string;authorityBasis:string;correlationId:string}
 export interface Step4FinalizationResult{contractVersion:ContractVersion;finalizationId:EntityId;workspaceId:EntityId;checkpointId:EntityId;parentVersionId:EntityId;draftVersionId:EntityId;draftVersionCode:string;appliedProposalIds:EntityId[];legalChangeIds:EntityId[];workspaceRevision:RevisionNumber;sealedAt:IsoDateTime;sealedBy:ActorRef}
+export interface FinalizeAuthoringRequest{contractVersion:ContractVersion;expectedRevision:RevisionNumber;versionCode:string;versionName:string;reason:string;authorityBasis:string;correlationId:string}
+export interface AuthoringFinalizationResult{contractVersion:ContractVersion;finalizationId:EntityId;workspaceId:EntityId;checkpointId:EntityId;parentVersionId:EntityId;draftVersionId:EntityId;draftVersionCode:string;legalChangeIds:EntityId[];workspaceRevision:RevisionNumber;sealedAt:IsoDateTime;sealedBy:ActorRef}
 
 export interface DraftBranch {
   contractVersion: ContractVersion;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { LegalDocumentSnapshot } from "@legal-document-builder/contracts";
-import { AutosaveCoordinator, classifySaveError, documentChanged, replaceNodeContent, requiresNavigationWarning } from "@/lib/editor-state";
+import { addLegalNode, AutosaveCoordinator, classifySaveError, deleteLegalNode, documentChanged, moveLegalNode, reorderLegalNode, replaceNodeContent, requiresNavigationWarning } from "@/lib/editor-state";
 
 const id=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,"0")}`;
 const doc=():LegalDocumentSnapshot=>({contractVersion:"1.1",legalDocumentId:id(1),documentTypeCode:"TEST",relationType:"NEW_DOCUMENT",metadata:{},ruleSet:{definitionId:id(2),versionId:id(3),versionCode:"1"},nodes:[{id:id(4),nodeTypeCode:"ARTICLE",parentNodeId:null,orderKey:"1",content:[{kind:"PARAGRAPH",spans:[{text:"A",marks:["BOLD"]}]}],metadata:{kept:true},lifecycleStatus:"ACTIVE"}],sourceRelations:[]});
@@ -12,3 +12,5 @@ test("stale revision giữ local draft",async()=>{const states:string[]=[];const
 test("structured reducer giữ metadata và nhận LIST",()=>{const next=replaceNodeContent(doc(),id(4),[{kind:"LIST",styleCode:"NUMBER",items:[{id:id(5),blocks:[{kind:"PARAGRAPH",spans:[{text:"Mục"}]}]}]}]);assert.equal(next.nodes[0].metadata.kept,true);assert.equal(next.nodes[0].content[0].kind,"LIST");assert.equal(documentChanged(doc(),next),true)});
 test("unsupported operation và navigation warning",()=>{assert.throws(()=>replaceNodeContent(doc(),id(99),[]),/UNSUPPORTED STRUCTURED OPERATION/);assert.equal(requiresNavigationWarning("BACKEND_ERROR"),true);assert.equal(requiresNavigationWarning("SAVED"),false)});
 test("phân loại validation auth và backend error",()=>{assert.equal(classifySaveError({code:"INVALID_DOCUMENT",message:"bad"},1).status,"VALIDATION_ERROR");assert.equal(classifySaveError({code:"FORBIDDEN",message:"no"},1).status,"AUTH_ERROR");assert.equal(classifySaveError({code:"DATABASE_UNAVAILABLE",message:"down"},1).status,"BACKEND_ERROR")});
+test("add/move/reorder/delete LegalNode giữ stable identity",()=>{let value=doc();value=addLegalNode(value,id(4),"CLAUSE","Khoản mới");const added=value.nodes.at(-1)!;assert.equal(added.parentNodeId,id(4));value=moveLegalNode(value,added.id,null,"2");assert.equal(value.nodes.at(-1)!.id,added.id);value=reorderLegalNode(value,added.id,-1);assert.equal(value.nodes.find(node=>node.id===added.id)!.orderKey,"1");value=deleteLegalNode(value,added.id);assert.equal(value.nodes.some(node=>node.id===added.id),false)});
+test("structure commands từ chối cycle và xóa parent còn con",()=>{const value=addLegalNode(doc(),id(4),"CLAUSE");const child=value.nodes.at(-1)!;assert.throws(()=>moveLegalNode(value,id(4),child.id),/chu trình/);assert.throws(()=>deleteLegalNode(value,id(4)),/node con/)});

@@ -1,4 +1,4 @@
-import type { LegalContentBlock, LegalDocumentSnapshot } from "@legal-document-builder/contracts";
+import type { LegalContentBlock, LegalDocumentSnapshot, LegalNode } from "@legal-document-builder/contracts";
 
 export type EditorSaveStatus = "LOADING" | "CLEAN" | "DIRTY" | "SAVING" | "SAVED" | "STALE" | "VALIDATION_ERROR" | "AUTH_ERROR" | "BACKEND_ERROR" | "UNSUPPORTED";
 
@@ -21,6 +21,24 @@ export function documentChanged(a: LegalDocumentSnapshot, b: LegalDocumentSnapsh
 export function replaceNodeContent(document: LegalDocumentSnapshot, nodeId: string, content: LegalContentBlock[]): LegalDocumentSnapshot {
   if (!document.nodes.some((node) => node.id === nodeId)) throw new Error("UNSUPPORTED STRUCTURED OPERATION: LegalNode không tồn tại.");
   return { ...document, nodes: document.nodes.map((node) => node.id === nodeId ? { ...node, content: structuredClone(content) } : node) };
+}
+
+const nextOrderKey=(nodes:LegalNode[],parentNodeId:string|null)=>String(Math.max(0,...nodes.filter(node=>node.parentNodeId===parentNodeId).map(node=>Number.parseInt(node.orderKey,10)||0))+1).padStart(4,"0");
+export function addLegalNode(document:LegalDocumentSnapshot,parentNodeId:string|null,nodeTypeCode:string,title?:string):LegalDocumentSnapshot{
+  if(parentNodeId!==null&&!document.nodes.some(node=>node.id===parentNodeId))throw new Error("UNSUPPORTED STRUCTURED OPERATION: parent không tồn tại.");
+  const node:LegalNode={id:crypto.randomUUID(),nodeTypeCode,parentNodeId,orderKey:nextOrderKey(document.nodes,parentNodeId),...(title?.trim()?{title:title.trim()}:{}),content:[{kind:"PARAGRAPH",spans:[{text:""}]}],metadata:{},lifecycleStatus:"ACTIVE"};return{...document,nodes:[...document.nodes,node]};
+}
+export function deleteLegalNode(document:LegalDocumentSnapshot,nodeId:string):LegalDocumentSnapshot{
+  if(!document.nodes.some(node=>node.id===nodeId))throw new Error("UNSUPPORTED STRUCTURED OPERATION: LegalNode không tồn tại.");if(document.nodes.some(node=>node.parentNodeId===nodeId))throw new Error("UNSUPPORTED STRUCTURED OPERATION: phải di chuyển hoặc xóa node con trước.");return{...document,nodes:document.nodes.filter(node=>node.id!==nodeId)};
+}
+export function moveLegalNode(document:LegalDocumentSnapshot,nodeId:string,parentNodeId:string|null,orderKey?:string):LegalDocumentSnapshot{
+  const node=document.nodes.find(item=>item.id===nodeId);if(!node)throw new Error("UNSUPPORTED STRUCTURED OPERATION: LegalNode không tồn tại.");if(parentNodeId===nodeId)throw new Error("UNSUPPORTED STRUCTURED OPERATION: node không thể là parent của chính nó.");
+  let cursor=parentNodeId;while(cursor){if(cursor===nodeId)throw new Error("UNSUPPORTED STRUCTURED OPERATION: thao tác tạo chu trình.");cursor=document.nodes.find(item=>item.id===cursor)?.parentNodeId??null}
+  const targetOrder=orderKey??nextOrderKey(document.nodes.filter(item=>item.id!==nodeId),parentNodeId);if(document.nodes.some(item=>item.id!==nodeId&&item.parentNodeId===parentNodeId&&item.orderKey===targetOrder))throw new Error("UNSUPPORTED STRUCTURED OPERATION: orderKey đã được sử dụng cùng parent.");
+  return{...document,nodes:document.nodes.map(item=>item.id===nodeId?{...item,parentNodeId,orderKey:targetOrder}:item)};
+}
+export function reorderLegalNode(document:LegalDocumentSnapshot,nodeId:string,direction:-1|1):LegalDocumentSnapshot{
+  const node=document.nodes.find(item=>item.id===nodeId);if(!node)throw new Error("UNSUPPORTED STRUCTURED OPERATION: LegalNode không tồn tại.");const siblings=document.nodes.filter(item=>item.parentNodeId===node.parentNodeId).sort((a,b)=>a.orderKey.localeCompare(b.orderKey)),index=siblings.findIndex(item=>item.id===nodeId),other=siblings[index+direction];if(!other)return document;return{...document,nodes:document.nodes.map(item=>item.id===node.id?{...item,orderKey:other.orderKey}:item.id===other.id?{...item,orderKey:node.orderKey}:item)};
 }
 
 export function classifySaveError(error: EditorSaveError, revision: number): EditorSaveState {
