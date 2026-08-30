@@ -64,6 +64,7 @@ function validateNodeShape(value: unknown, index: number): asserts value is Lega
   validateContent(value.content, `document.nodes[${index}].content`);
   if (!object(value.metadata)) throw new AppError("INVALID_DOCUMENT", `Metadata node ${index} phải là object.`);
 }
+export function validateLegalNode(value:unknown):asserts value is LegalNode{validateNodeShape(value,0)}
 
 export function validateDocument(document: unknown): asserts document is LegalDocumentSnapshot {
   if (!object(document)) throw new AppError("INVALID_DOCUMENT", "Document phải là object.");

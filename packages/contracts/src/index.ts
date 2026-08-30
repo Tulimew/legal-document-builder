@@ -4,6 +4,7 @@ export * from "./common";
 export * from "./comparison";
 export * from "./drafting";
 export * from "./legal-content";
+export * from "./merge";
 export * from "./provenance";
 export * from "./review";
 export * from "./iam";

@@ -156,7 +156,7 @@ export class PostgresWorkspaceRepository {
       const synchronizedAt = databaseClock.rows[0].synchronized_at;
       const nextRevision = actualRevision + 1;
       await client.query("SET CONSTRAINTS ALL DEFERRED");
-      await reconcileNodes(client, command.workspaceId, command.document.nodes, command.actor, synchronizedAt);
+      await reconcileWorkspaceNodes(client, command.workspaceId, command.document.nodes, command.actor, synchronizedAt);
       await client.query(
         `UPDATE legal_builder.draft_workspace
             SET revision = $2,
@@ -215,7 +215,7 @@ function comparableNode(node: LegalNode): object {
   };
 }
 
-async function reconcileNodes(
+export async function reconcileWorkspaceNodes(
   client: PoolClient,
   workspaceId: string,
   nodes: LegalNode[],
