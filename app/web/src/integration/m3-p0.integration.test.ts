@@ -72,7 +72,7 @@ test("P0 M3 chạy chuỗi nghiệp vụ thật trên PostgreSQL development",as
     assert.equal(finalized.legalChangeIds.length,1);
     const persisted=await pool.query<{effective_version_id:string;before_state:Record<string,unknown>;after_state:Record<string,unknown>}>("SELECT effective_version_id,before_state,after_state FROM legal_builder.draft_legal_node_change WHERE id=$1",[finalized.legalChangeIds[0]]);
     assert.equal(persisted.rows[0].effective_version_id,finalized.draftVersionId);
-    assert.match(JSON.stringify(persisted.rows[0].before_state),new RegExp(suffix));
+    assert.match(JSON.stringify(persisted.rows[0].before_state),new RegExp(workspaceNode.content.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
     assert.match(JSON.stringify(persisted.rows[0].after_state),new RegExp(suffix));
   });
 

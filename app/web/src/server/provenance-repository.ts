@@ -40,6 +40,20 @@ export class PostgresProvenanceRepository {
       for(const link of resolutions.filter(row=>row.change_id===change.id)) edges.push(canViewReview?{from:ref("COMMENT_RESOLUTION",link.resolution_id),to:ref("COMMENT",link.comment_id),relation:"RESOLVES",status:"VERIFIED"}:{from:entity,relation:"HAS_REVIEW_SOURCE",status:"REDACTED"});
       return {entity,occurredAt:new Date(String(change.decided_at)).toISOString(),actor:{userId:String(change.performed_by_user_id)},summary:String(change.reason),edges};
     });
+    if(key==="draftVersionId") {
+      const mergeEdge=await this.pool.query("SELECT source_version_id FROM legal_builder.draft_version_edge WHERE version_id=$1 AND edge_type='MERGE_SOURCE'",[id]);
+      if(mergeEdge.rowCount) {
+        const operation=await this.pool.query("SELECT id,completed_at FROM legal_builder.draft_merge_operation WHERE project_id=$1 AND completed_version_id=$2 AND status_code='COMPLETED'",[projectId,id]);
+        const entity=ref("DRAFT_VERSION",id);
+        entries.unshift(operation.rowCount?{
+          entity,occurredAt:new Date(operation.rows[0].completed_at).toISOString(),summary:"Verified persistent merge operation",
+          edges:[{from:entity,to:ref("DRAFT_MERGE_OPERATION",operation.rows[0].id),relation:"HAS_MERGE_OPERATION",status:"VERIFIED"},{from:entity,to:ref("DRAFT_VERSION",mergeEdge.rows[0].source_version_id),relation:"MERGED_FROM",status:"VERIFIED"}],
+        }:{
+          entity,summary:"Legacy merge edge without persistent operation evidence",
+          edges:[{from:entity,relation:"HAS_MERGE_OPERATION",status:"UNVERIFIED_REFERENCE"},{from:entity,to:ref("DRAFT_VERSION",mergeEdge.rows[0].source_version_id),relation:"MERGED_FROM",status:"VERIFIED"}],
+        });
+      }
+    }
     return {contractVersion:"1.1",anchor:ref(key.replace(/Id$/,"").toUpperCase(),id),entries};
   }
 }
