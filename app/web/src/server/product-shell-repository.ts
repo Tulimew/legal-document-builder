@@ -54,7 +54,7 @@ export class PostgresProductShellRepository {
 
   async dashboard(actor: ActorRef, projectId: string): Promise<ProjectDashboard> {
     const result = await this.pool.query(`${ACCESS_CTE}
-      SELECT p.*,a.access_kind,d.id legal_document_id,w.id workspace_id,w.branch_id,
+      SELECT p.*,a.access_kind,d.id legal_document_id,w.id workspace_id,w.branch_id,rr.id review_round_id,rr.source_draft_version_id review_source_version_id,rr.code review_round_code,rr.name review_round_name,
         (SELECT count(*) FROM legal_builder.workflow_stage_instance s WHERE s.project_id=p.id AND s.status_code IN('ACTIVE','BLOCKED')) active_workflow_stages,
         (SELECT count(*) FROM legal_builder.comment c WHERE c.project_id=p.id) total_comments,
         (SELECT count(*) FROM legal_builder.comment c WHERE c.project_id=p.id AND NOT EXISTS(SELECT 1 FROM legal_builder.comment_resolution r WHERE r.comment_id=c.id)) unresolved_comments,
@@ -67,6 +67,7 @@ export class PostgresProductShellRepository {
       FROM authorized a JOIN legal_builder.legal_document_project p ON p.id=a.project_id
       JOIN legal_builder.legal_document d ON d.project_id=p.id
       JOIN LATERAL(SELECT x.id,x.branch_id FROM legal_builder.draft_workspace x JOIN legal_builder.draft_branch b ON b.id=x.branch_id WHERE x.project_id=p.id AND b.status='ACTIVE' ORDER BY x.updated_at DESC,x.id LIMIT 1) w ON true
+      LEFT JOIN LATERAL(SELECT r.id,r.source_draft_version_id,r.code,r.name FROM legal_builder.review_round r WHERE r.project_id=p.id AND r.closed_at IS NULL ORDER BY r.opened_at DESC,r.id LIMIT 1) rr ON true
       WHERE p.id=$2`, [actor.userId, projectId]);
     if (!result.rowCount) throw new AppError("FORBIDDEN", "Bạn không có quyền xem hồ sơ này.");
     const row = result.rows[0];
@@ -78,7 +79,7 @@ export class PostgresProductShellRepository {
     return {
       contractVersion: "1.1",
       project: project(row),
-      context: { legalDocumentId: String(row.legal_document_id), workspaceId: String(row.workspace_id), branchId: String(row.branch_id) },
+      context: { legalDocumentId: String(row.legal_document_id), workspaceId: String(row.workspace_id), branchId: String(row.branch_id), ...(row.review_round_id ? { reviewRound: { id: String(row.review_round_id), sourceDraftVersionId: String(row.review_source_version_id), code: String(row.review_round_code), name: String(row.review_round_name) } } : {}) },
       ...(recentVersions[0] ? { latestVersion: recentVersions[0] } : {}),
       counts: {
         activeWorkflowStages: Number(row.active_workflow_stages), totalComments: Number(row.total_comments), unresolvedComments: Number(row.unresolved_comments),

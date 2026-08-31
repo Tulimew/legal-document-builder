@@ -5,7 +5,7 @@ export function ProjectNavigation({ projectId, active }: { projectId: string; ac
     ["overview", "Tổng quan", `/projects/${projectId}`],
     ["drafting", "Soạn thảo", `/projects/${projectId}/drafting`],
     ["workflow", "Quy trình", `/projects/${projectId}/workflow`],
-    ["review", "Góp ý", `/ho-so/du-thao-thong-tu-mau/gop-y?projectId=${projectId}`],
+    ["review", "Góp ý", `/projects/${projectId}/review`],
     ["comparison", "So sánh", `/ho-so/du-thao-thong-tu-mau/soan-thao/ban-so-sanh?projectId=${projectId}`],
     ["branches", "Nhánh", `/ho-so/du-thao-thong-tu-mau/soan-thao/nhanh?projectId=${projectId}`],
     ["publishing", "Xuất bản", `/ho-so/du-thao-thong-tu-mau/xuat-ban?projectId=${projectId}`],
