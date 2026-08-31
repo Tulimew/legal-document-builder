@@ -7,6 +7,7 @@ export * from "./legal-content";
 export * from "./merge";
 export * from "./provenance";
 export * from "./publishing";
+export * from "./product-shell";
 export * from "./review";
 export * from "./iam";
 export * from "./deliberation";
