@@ -1,6 +1,6 @@
 # M7 — Governed Publishing & Release Artifacts
 
-> Trạng thái: **PROPOSED SCOPE GATE**
+> Trạng thái: **APPROVED — IMPLEMENTATION COMPLETE / READY TO MERGE**
 >
 > Baseline: `main@17b66a1514532576fd4f2b9648281bcea0d1ea4a`; M6 đã merge; 138/138 tests, lint/build/diff-check PASS; migrations `0001`–`0019`.
 
