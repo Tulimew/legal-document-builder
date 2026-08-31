@@ -14,6 +14,7 @@ export interface AuthorizedProjectSummary {
 export interface ProjectDashboard {
   contractVersion: ContractVersion;
   project: AuthorizedProjectSummary;
+  context: { legalDocumentId: EntityId; workspaceId: EntityId; branchId: EntityId };
   latestVersion?: { id: EntityId; code: string; name: string; sealedAt: IsoDateTime };
   counts: {
     activeWorkflowStages: number;

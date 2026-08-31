@@ -1,0 +1,14 @@
+import Link from "next/link";
+
+export function ProjectNavigation({ projectId, active }: { projectId: string; active: string }) {
+  const items = [
+    ["overview", "Tổng quan", `/projects/${projectId}`],
+    ["drafting", "Soạn thảo", `/projects/${projectId}/drafting`],
+    ["workflow", "Quy trình", `/projects/${projectId}/workflow`],
+    ["review", "Góp ý", `/ho-so/du-thao-thong-tu-mau/gop-y?projectId=${projectId}`],
+    ["comparison", "So sánh", `/ho-so/du-thao-thong-tu-mau/soan-thao/ban-so-sanh?projectId=${projectId}`],
+    ["branches", "Nhánh", `/ho-so/du-thao-thong-tu-mau/soan-thao/nhanh?projectId=${projectId}`],
+    ["publishing", "Xuất bản", `/ho-so/du-thao-thong-tu-mau/xuat-ban?projectId=${projectId}`],
+  ];
+  return <nav aria-label="Mô-đun hồ sơ" className="flex flex-wrap gap-2 border-b bg-white px-5 py-3">{items.map(([key, label, href]) => <Link className={`rounded-lg px-3 py-2 text-sm font-semibold ${active === key ? "bg-blue-700 text-white" : "text-slate-700 hover:bg-slate-100"}`} href={href} key={key}>{label}</Link>)}</nav>;
+}

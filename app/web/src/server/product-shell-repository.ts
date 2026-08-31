@@ -54,7 +54,7 @@ export class PostgresProductShellRepository {
 
   async dashboard(actor: ActorRef, projectId: string): Promise<ProjectDashboard> {
     const result = await this.pool.query(`${ACCESS_CTE}
-      SELECT p.*,a.access_kind,
+      SELECT p.*,a.access_kind,d.id legal_document_id,w.id workspace_id,w.branch_id,
         (SELECT count(*) FROM legal_builder.workflow_stage_instance s WHERE s.project_id=p.id AND s.status_code IN('ACTIVE','BLOCKED')) active_workflow_stages,
         (SELECT count(*) FROM legal_builder.comment c WHERE c.project_id=p.id) total_comments,
         (SELECT count(*) FROM legal_builder.comment c WHERE c.project_id=p.id AND NOT EXISTS(SELECT 1 FROM legal_builder.comment_resolution r WHERE r.comment_id=c.id)) unresolved_comments,
@@ -65,6 +65,8 @@ export class PostgresProductShellRepository {
         (SELECT count(*) FROM legal_builder.release_package x WHERE x.project_id=p.id AND x.status_code='DRAFT') draft_packages,
         (SELECT count(*) FROM legal_builder.release_package x WHERE x.project_id=p.id AND x.status_code='SEALED') sealed_packages
       FROM authorized a JOIN legal_builder.legal_document_project p ON p.id=a.project_id
+      JOIN legal_builder.legal_document d ON d.project_id=p.id
+      JOIN LATERAL(SELECT x.id,x.branch_id FROM legal_builder.draft_workspace x JOIN legal_builder.draft_branch b ON b.id=x.branch_id WHERE x.project_id=p.id AND b.status='ACTIVE' ORDER BY x.updated_at DESC,x.id LIMIT 1) w ON true
       WHERE p.id=$2`, [actor.userId, projectId]);
     if (!result.rowCount) throw new AppError("FORBIDDEN", "Bạn không có quyền xem hồ sơ này.");
     const row = result.rows[0];
@@ -76,6 +78,7 @@ export class PostgresProductShellRepository {
     return {
       contractVersion: "1.1",
       project: project(row),
+      context: { legalDocumentId: String(row.legal_document_id), workspaceId: String(row.workspace_id), branchId: String(row.branch_id) },
       ...(recentVersions[0] ? { latestVersion: recentVersions[0] } : {}),
       counts: {
         activeWorkflowStages: Number(row.active_workflow_stages), totalComments: Number(row.total_comments), unresolvedComments: Number(row.unresolved_comments),
