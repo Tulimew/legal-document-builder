@@ -1,12 +1,12 @@
 # Project State
 
-- **Current milestone:** M6 — Structured Legal Editor & Rich Authoring
-- **Current phase:** Phase 5 complete; awaiting owner merge review
-- **Main baseline:** `61d6716743b1b592bbcb55f99a38d19a0dbb2e6d`
-- **Branch:** `codex/m6-structured-editor-rich-authoring`
-- **Migrations:** `0001`–`0019`; persisted RuleSet/backfill, authoring finalization, merge asset projection and fresh-development bootstrap
-- **Test count:** 138/138 PASS on a newly migrated and seeded PostgreSQL development database
-- **Completed capabilities:** canonical rich editing; table/figure authoring; persisted RuleSet validation; LegalNode structure commands; transactional authoring finalization; structured fork/version/merge compatibility with graph/provenance evidence
-- **Remaining capabilities:** owner review and merge decision; M6 out-of-scope work remains in future milestones
-- **Open blockers:** none
-- **Last successful build:** M6 final gate: 138/138 tests, lint/build/diff-check PASS; browser Table/Figure autosave/reload acceptance PASS
+- **Current milestone:** M8 — Persistent Product Shell & Operational Workbenches
+- **Current phase:** Phase 5 complete; `READY TO MERGE`; manual browser E2E deferred by project owner
+- **Main baseline:** M7 verified head `b4ccd959098774a828f938a9742470e90291ca7d` (remote synchronization was unavailable when M8 started)
+- **Branch:** `codex/m8-product-shell-persistent-workbenches`
+- **Migrations:** `0001`–`0024`; M8 adds project search/activity/membership permissions, with product state remaining PostgreSQL-persistent
+- **Test count:** 169/169 PASS on newly migrated and seeded PostgreSQL 18 database `legal_document_builder_m8_gate_dev`
+- **Completed capabilities:** authorized project registry/dashboard, route-scoped product shell, persistent editor/workflow/review/comparison/branch/publishing workbenches, and permissioned search/activity/membership views
+- **Remaining capabilities:** deferred manual browser E2E; production IAM, approved legal templates, NAS/object-storage deployment, backup/restore, official issuance/digital signature, and AI integration remain later operational scope
+- **Open blockers:** none for the M8 merge candidate; Codex Browser Use localhost denial remains post-merge verification debt
+- **Last successful build:** M8 Phase 5 — 169 tests, lint, production build, migrations `0001`–`0024`, fresh seed, and diff-check PASS; manual browser E2E deferred, not certified
