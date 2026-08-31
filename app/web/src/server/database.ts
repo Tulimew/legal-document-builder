@@ -1,19 +1,16 @@
 import { Pool, type PoolClient, type PoolConfig } from "pg";
 
-import { AppError } from "./errors";
+import { readDatabaseRuntimeConfig } from "./runtime-config";
 
 declare global {
   var legalBuilderPool: Pool | undefined;
 }
 
 function poolConfig(): PoolConfig {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new AppError("DATABASE_UNAVAILABLE", "DATABASE_URL chưa được cấu hình.");
-  }
+  const config = readDatabaseRuntimeConfig();
   return {
-    connectionString,
-    max: Number(process.env.DATABASE_POOL_MAX ?? 10),
+    connectionString: config.connectionString,
+    max: config.poolMax,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
     application_name: "legal-document-builder-web",
