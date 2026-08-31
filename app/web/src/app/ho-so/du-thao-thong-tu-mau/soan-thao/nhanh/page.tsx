@@ -1,1 +1,1 @@
-import type{Metadata}from"next";import{BranchMergeWorkbench}from"@/components/editor/branch-merge-workbench";export const metadata:Metadata={title:"Nhánh và hợp nhất"};export default function BranchMergePage(){return <BranchMergeWorkbench/>}
+import type{Metadata}from"next";import{BranchMergeWorkbench}from"@/components/editor/branch-merge-workbench";export const metadata:Metadata={title:"Nhánh và hợp nhất"};export default function BranchMergePage(){return <BranchMergeWorkbench projectId={process.env.NEXT_PUBLIC_SAMPLE_PROJECT_ID??""}/>}

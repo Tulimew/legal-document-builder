@@ -1,12 +1,12 @@
 # Project State
 
-- **Current milestone:** M7 — Governed Publishing & Release Artifacts
-- **Current phase:** Phase 5 complete; `READY TO MERGE`
-- **Main baseline:** `17b66a1514532576fd4f2b9648281bcea0d1ea4a`
-- **Branch:** `codex/m7-governed-publishing`
-- **Migrations:** `0001`–`0023`; templates, durable jobs, generated artifacts, verification history, orphan evidence, and release packages are persistent
-- **Test count:** 153/153 PASS on a newly migrated and seeded PostgreSQL 18 development database
-- **Completed capabilities:** M6 baseline plus versioned templates, immutable filesystem storage, durable DOCX/PDF publishing, authorized download/verification, and sealed canonical release packages
-- **Remaining capabilities:** production IAM, approved legal templates, NAS/object-storage deployment, backup/restore, official issuance/digital signature, and AI integration (outside M7)
-- **Open blockers:** none for M7 merge; production deployment is explicitly not certified
-- **Last successful build:** M7 Phase 5 — tests, lint, production build, diff-check, browser E2E, Word DOCX open/export, and PDF visual QA PASS
+- **Current milestone:** M8 — Persistent Product Shell & Operational Workbenches
+- **Current phase:** Phase 5 complete; `READY TO MERGE`; manual browser E2E deferred by project owner
+- **Main baseline:** M7 verified head `b4ccd959098774a828f938a9742470e90291ca7d` (remote synchronization was unavailable when M8 started)
+- **Branch:** `codex/m8-product-shell-persistent-workbenches`
+- **Migrations:** `0001`–`0024`; M8 adds project search/activity/membership permissions, with product state remaining PostgreSQL-persistent
+- **Test count:** 169/169 PASS on newly migrated and seeded PostgreSQL 18 database `legal_document_builder_m8_gate_dev`
+- **Completed capabilities:** authorized project registry/dashboard, route-scoped product shell, persistent editor/workflow/review/comparison/branch/publishing workbenches, and permissioned search/activity/membership views
+- **Remaining capabilities:** deferred manual browser E2E; production IAM, approved legal templates, NAS/object-storage deployment, backup/restore, official issuance/digital signature, and AI integration remain later operational scope
+- **Open blockers:** none for the M8 merge candidate; Codex Browser Use localhost denial remains post-merge verification debt
+- **Last successful build:** M8 Phase 5 — 169 tests, lint, production build, migrations `0001`–`0024`, fresh seed, and diff-check PASS; manual browser E2E deferred, not certified

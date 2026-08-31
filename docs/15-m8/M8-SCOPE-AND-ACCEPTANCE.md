@@ -1,6 +1,6 @@
 # M8 — Persistent Product Shell & Operational Workbenches
 
-> Trạng thái: **APPROVED BY OWNER AUTONOMY — IMPLEMENTATION ACTIVE**
+> Trạng thái: **IMPLEMENTATION COMPLETE — READY TO MERGE WITH OWNER-WAIVED MANUAL E2E**
 >
 > Baseline: M7 branch `b4ccd959098774a828f938a9742470e90291ca7d`; M7 is `READY TO MERGE`. Remote fetch was unavailable when M8 started, so M8 preserves direct ancestry from the verified M7 head.
 
@@ -57,29 +57,29 @@ M8 không chọn production identity provider, NAS vendor, chính sách backup/R
 
 ### Product shell
 
-- [ ] Actor chỉ thấy project được cấp quyền.
-- [ ] Dashboard counts/recent items được tính từ PostgreSQL và nhất quán với entity nguồn.
-- [ ] Empty/error/forbidden không bị trình bày như dữ liệu mẫu.
-- [ ] Navigation giữ đúng project identity qua các module.
+- [x] Actor chỉ thấy project được cấp quyền.
+- [x] Dashboard counts/recent items được tính từ PostgreSQL và nhất quán với entity nguồn.
+- [x] Empty/error/forbidden không bị trình bày như dữ liệu mẫu.
+- [x] Navigation giữ đúng project identity qua các module.
 
 ### Persistent workbenches
 
-- [ ] Editor, workflow, review, comparison, branch/merge và publishing chạy từ canonical project context.
-- [ ] Không có business fallback sang mock/localStorage trên canonical route.
-- [ ] Mọi mutation giữ optimistic concurrency/transaction/audit hiện có.
+- [x] Editor, workflow, review, comparison, branch/merge và publishing chạy từ canonical project context.
+- [x] Không có business fallback sang mock/localStorage trên canonical route.
+- [x] Mọi mutation giữ optimistic concurrency/transaction/audit hiện có.
 
 ### Search and operations
 
-- [ ] Search bị scope theo project và permission, có bounded limit/cursor.
-- [ ] Audit/activity không lộ storage key, snapshot đầy đủ, comment content hoặc metadata nhạy cảm không cần thiết.
-- [ ] Admin UI không tuyên bố production provisioning/SSO chưa tồn tại.
+- [x] Search bị scope theo project và permission, có bounded limit/cursor.
+- [x] Audit/activity không lộ storage key, snapshot đầy đủ, comment content hoặc metadata nhạy cảm không cần thiết.
+- [x] Admin UI không tuyên bố production provisioning/SSO chưa tồn tại.
 
 ### Quality
 
-- [ ] Unit tests cho route context, state classification và pagination.
-- [ ] PostgreSQL integration cho authorized project list, dashboard isolation, search isolation và error behavior.
-- [ ] Browser E2E trên PostgreSQL thật cho luồng sản phẩm canonical.
-- [ ] `npm.cmd test`, `npm.cmd run lint`, `npm.cmd run build`, `git diff --check` pass.
+- [x] Unit tests cho route context, state classification và pagination.
+- [x] PostgreSQL integration cho authorized project list, dashboard isolation, search isolation và error behavior.
+- [ ] Browser E2E trên PostgreSQL thật cho luồng sản phẩm canonical — **DEFERRED BY PROJECT OWNER on 2026-08-31** do Codex Browser Use vẫn chặn localhost sau khi thử in-app browser, Chrome, Edge, khởi động lại máy và cài lại Codex. Đây là evidence còn thiếu, không được trình bày là PASS.
+- [x] `npm.cmd test`, `npm.cmd run lint`, `npm.cmd run build`, `git diff --check` pass.
 
 ## 5. Explicitly out of scope
 
@@ -100,4 +100,4 @@ M8 không chọn production identity provider, NAS vendor, chính sách backup/R
 
 ## 7. Definition of Done
 
-M8 là `READY TO MERGE` khi một actor development có membership thật có thể đi từ danh sách hồ sơ qua toàn bộ capability M1–M7 bằng canonical project context và PostgreSQL state, không cần sample identity, mock fallback hoặc localStorage business persistence. Verdict này chưa phải production deployment/IAM/NAS readiness.
+M8 là `READY TO MERGE` khi một actor development có membership thật có thể đi từ danh sách hồ sơ qua toàn bộ capability M1–M7 bằng canonical project context và PostgreSQL state, không cần sample identity, mock fallback hoặc localStorage business persistence. Owner đã tạm miễn browser/manual E2E ngày 2026-08-31 để không chặn hoàn thiện sản phẩm; automated tests và PostgreSQL integration là merge gate hiện hành, còn manual E2E được giữ thành post-merge verification debt. Verdict này chưa phải production deployment/IAM/NAS readiness.
