@@ -39,3 +39,15 @@
 
 - `1546a7a` — project creation, system administration foundation và migration `0027`.
 - `9f89ab9` — account lifecycle, project assignment và amendment source registration.
+
+## NAS deployment evidence — 2026-09-01
+
+- Merge commit deployed: `8c03cbd1bf82081156c1afcb051459acd16bc122`.
+- Image: `legal-document-builder:8c03cbd`.
+- Backup bundle and SHA-256 verification completed before image build/migration; rollout could not reach migration while this step failed because the script is fail-fast.
+- Migration `0027_m13_system_administration.sql` is recorded in the production migration ledger.
+- Local account `tangt` received the explicit `SYSTEM_ADMIN` assignment; no inferred administrator backfill was used.
+- PostgreSQL, web and worker containers started; web is published only at `192.168.1.178:13108`.
+- LAN health is `alive`; readiness is `ready` with database, migrations and storage all `ready`.
+- Login page returns HTTP 200 through the LAN endpoint.
+- DSM reverse proxy returns HTTP 200 when the configured hostname is resolved to the NAS, but Windows Schannel reports a certificate principal mismatch. Certificate association/SAN for the public hostname must be confirmed in DSM before TLS is marked verified.
