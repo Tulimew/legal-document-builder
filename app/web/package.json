@@ -14,6 +14,7 @@
     "recovery:backup:development": "tsx scripts/backup-development.ts",
     "recovery:restore:development": "tsx scripts/restore-development.ts"
     ,"auth:provision": "tsx scripts/provision-local-user.ts"
+    ,"production:bootstrap-pilot": "tsx scripts/bootstrap-pilot-project.ts"
     ,"deployment:preflight": "tsx scripts/deployment-preflight.ts"
     ,"release:manifest": "tsx scripts/generate-release-manifest.ts"
     ,"release:package": "tsx scripts/package-release.ts"
