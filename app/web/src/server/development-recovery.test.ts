@@ -6,6 +6,7 @@ import test from "node:test";
 
 import { AppError } from "./errors";
 import { assertDevelopmentDatabaseUrl, createRecoveryManifest, verifyRecoveryBundle } from "./development-recovery";
+import { REQUIRED_MIGRATION } from "./readiness";
 
 test("recovery guard only permits explicit _dev databases", () => {
   assert.equal(assertDevelopmentDatabaseUrl("postgresql://user:pass@localhost/legal_builder_dev", "source").pathname, "/legal_builder_dev");
@@ -25,7 +26,7 @@ test("recovery manifest inventories dump/storage and detects corruption", async 
   await writeFile(dump, "database-dump");
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const pool = { query: async (sql: string) => sql.includes("schema_migration")
-    ? { rowCount: 1, rows: [{ name: "0024_m8_product_operations_permissions.sql" }] }
+    ? { rowCount: 1, rows: [{ name: REQUIRED_MIGRATION }] }
     : { rowCount: 1, rows: [{ projects: 3, draft_versions: 4, audit_events: 5, generated_documents: 1, release_packages: 0 }] } };
   const manifest = await createRecoveryManifest({ sourceDatabaseUrl: "postgresql://user:pass@localhost/legal_builder_dev", pool: pool as never, dumpPath: dump, storageRoot: sourceStorage, bundleDirectory: bundle, now: new Date("2026-09-01T00:00:00Z") });
   assert.equal(manifest.storageFiles.length, 1);
