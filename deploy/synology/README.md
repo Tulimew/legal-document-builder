@@ -1,6 +1,6 @@
 # Synology deployment
 
-Target: Synology Container Manager on `192.168.1.178`, with all persistent state under `/volume1/docker/legal-document-builder`. PostgreSQL stays on the private Compose network. Synology Docker does not publish the tested loopback binding, so web is bound only to `192.168.1.178:13108` for the DSM reverse proxy; restrict this port to LAN in DSM Firewall and never forward it on the router. Do not expose PostgreSQL.
+Target: Synology Container Manager on `192.168.1.178`, with all persistent state under `/volume1/docker/legal-document-builder`. PostgreSQL has no published port and is reachable only by services on the Compose bridge. Synology Docker does not publish host ports from an `internal` network or the tested loopback binding, so web is bound only to `192.168.1.178:13108` for the DSM reverse proxy; restrict this port to LAN in DSM Firewall and never forward it on the router.
 
 ## One-time preparation
 

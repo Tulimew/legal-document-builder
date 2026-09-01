@@ -14,6 +14,8 @@ test("M12 Synology compose keeps database private and mounts governed persistenc
   assert.match(compose, /data\/postgres/);
   assert.match(compose, /data\/publishing/);
   assert.match(compose, /condition: service_completed_successfully/);
+  assert.match(compose, /backend:\s+driver: bridge/);
+  assert.doesNotMatch(compose, /internal: true/);
 });
 
 test("M12 deploy files contain no deployed secret and require external protected config", async () => {
