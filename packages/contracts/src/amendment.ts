@@ -1,4 +1,5 @@
-import type { ActorRef, ContractVersion, EntityId, IsoDateTime, JsonValue } from "./common";
+import type { ActorRef, ContractVersion, EntityId, IsoDateTime, JsonValue, VersionedConfigRef } from "./common";
+import type { LegalNode } from "./legal-content";
 
 export type AmendmentOperationType="ADD"|"REPLACE"|"REPEAL"|"RENAME"|"MOVE"|"SPLIT"|"MERGE"|"REPLACE_PHRASE"|"REMOVE_PHRASE";
 export type MultiDocumentAmendmentLayout="ARTICLE_PER_DOCUMENT"|"CHAPTER_PER_DOCUMENT";
@@ -8,5 +9,9 @@ export interface AmendmentSourceSummary{contractVersion:ContractVersion;id:Entit
 export interface AmendmentTarget{contractVersion:ContractVersion;id:EntityId;projectId:EntityId;sourceDocumentId:EntityId;sourceVersionId:EntityId;sourceCode:string;sourceTitle:string;documentTypeCode:string;targetOrder:number;verificationStatus:"UNVERIFIED"|"VERIFIED"|"REJECTED";status:"ACTIVE"|"SUPERSEDED";createdAt:IsoDateTime;createdBy:ActorRef}
 export interface CreateAmendmentTargetRequest{contractVersion:ContractVersion;sourceDocumentId:EntityId;sourceVersionId:EntityId;correlationId:string}
 export interface RegisterAmendmentSourceRequest{contractVersion:ContractVersion;code:string;title:string;documentTypeCode:string;sourceDescription:string;identifyingMetadata:Record<string,JsonValue>;correlationId:string}
+export interface AmendmentSourceSnapshot{contractVersion:string;ingestionStatus:string;ruleSet?:VersionedConfigRef;nodes:LegalNode[];identifyingMetadata:Record<string,JsonValue>}
+export interface ImportAmendmentSourceVersionRequest{contractVersion:ContractVersion;ruleSet:VersionedConfigRef;nodes:LegalNode[];sourceDescription:string;correlationId:string}
+export interface VerifyAmendmentSourceVersionRequest{contractVersion:ContractVersion;verificationBasis:string;correlationId:string}
+export interface AmendmentSourceVersionDetail{contractVersion:ContractVersion;id:EntityId;sourceDocumentId:EntityId;versionNumber:number;verificationStatus:"UNVERIFIED"|"VERIFIED"|"REJECTED";snapshot:AmendmentSourceSnapshot;checksumSha256:string;sourceDescription:string;recordedAt:IsoDateTime;verifiedAt?:IsoDateTime}
 export interface AmendmentOperation{contractVersion:ContractVersion;id:EntityId;projectId:EntityId;amendmentTargetId:EntityId;sourceVersionId:EntityId;sequence:number;operationType:AmendmentOperationType;targetNodeIds:EntityId[];beforeSnapshot:Record<string,JsonValue>;proposedContent:Record<string,JsonValue>;anchorConfiguration:Record<string,JsonValue>;reason:string;status:"DRAFT"|"PROPOSED"|"CONFLICT"|"APPROVED"|"REJECTED";effectiveDraftVersionId?:EntityId;supersedesOperationId?:EntityId;recordedAt:IsoDateTime;recordedBy:ActorRef}
 export interface ConsolidatedProjection{contractVersion:ContractVersion;id:EntityId;projectId:EntityId;amendmentTargetId:EntityId;sourceVersionId:EntityId;draftVersionId:EntityId;operationIds:EntityId[];projectedSnapshot:Record<string,JsonValue>;validationResult:Record<string,JsonValue>;status:"COMPLETE"|"INCOMPLETE"|"CONFLICT";generatedAt:IsoDateTime;generatedBy:ActorRef}

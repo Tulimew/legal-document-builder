@@ -17,6 +17,7 @@ export class PostgresRuleSetRepository {
     const row=await this.ensureWritable(result.rows[0]);
     validateConfiguredTree(row.configuration,nodes);
   }
+  async validateNodes(ruleSet:VersionedConfigRef,nodes:LegalNode[]):Promise<void>{const row=await this.loadWritableRuleSet(ruleSet);validateConfiguredTree(row.configuration,nodes)}
   private async loadWritableRuleSet(ruleSet:VersionedConfigRef):Promise<RuleSetRow>{
     const result=await this.queryable.query<RuleSetRow>("SELECT * FROM legal_builder.legal_structure_rule_set_version WHERE id=$1 AND definition_id=$2 AND version_code=$3",[ruleSet.versionId,ruleSet.definitionId,ruleSet.versionCode]);
     if(!result.rowCount)throw new AppError("INVALID_DOCUMENT","Không tìm thấy persisted RuleSet version được workspace tham chiếu.");

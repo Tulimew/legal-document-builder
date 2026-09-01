@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { ProjectCreationDialog } from "@/components/administration/project-creation-dialog";
+import { viLabel } from "@/lib/vietnamese-labels";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
@@ -68,19 +69,19 @@ export function ProjectHome() {
     ["Ý kiến chưa xử lý", dashboard.counts.unresolvedComments],
     ["Nhánh đang mở", dashboard.counts.activeBranches],
     ["Hợp nhất đang mở", dashboard.counts.openMergeOperations],
-    ["Artifact khả dụng", dashboard.counts.availableArtifacts],
-    ["Job đang chạy", dashboard.counts.queuedOrRunningPublishingJobs],
-    ["Gói đã seal", dashboard.counts.sealedPackages],
+    ["Tài liệu đã tạo", dashboard.counts.availableArtifacts],
+    ["Tác vụ xuất bản đang xử lý", dashboard.counts.queuedOrRunningPublishingJobs],
+    ["Gói đã khóa", dashboard.counts.sealedPackages],
   ] : [];
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
     <header className="border-b bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-700">Hệ thống hỗ trợ</p><h1 className="text-lg font-semibold">Xây dựng văn bản quy phạm pháp luật</h1></div><div className="flex gap-2">{canCreate&&<button className="button button-primary" onClick={()=>setCreateOpen(true)}>+ Tạo hồ sơ mới</button>}<Link className="button button-secondary" href="/quan-tri">Quản trị</Link></div></div></header>
     <main className="mx-auto max-w-7xl space-y-5 p-6">
       <section className="card p-5"><label className="text-sm font-semibold" htmlFor="project-selector">Hồ sơ được cấp quyền</label><select id="project-selector" className="mt-2 block w-full rounded-lg border border-slate-300 bg-white p-3" value={selectedId} onChange={(event) => { setMessage(""); setDashboard(null); setSelectedId(event.target.value); }}>{projects.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select>{message && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">{message}</p>}</section>
-      {!dashboard ? <section className="card p-8 text-center text-slate-500">Đang tải dashboard PostgreSQL…</section> : <>
-        <section className="card flex flex-col justify-between gap-4 p-5 lg:flex-row lg:items-center"><div><div className="flex gap-2"><span className="badge badge-blue">{dashboard.project.code}</span><span className="badge badge-slate">{dashboard.project.status}</span><span className="badge badge-slate">{dashboard.project.access}</span></div><h2 className="mt-3 text-2xl font-bold">{dashboard.project.name}</h2><p className="mt-1 text-sm text-slate-500">{dashboard.project.documentTypeCode} · dữ liệu dashboard từ PostgreSQL</p></div><Link className="button button-primary" href={`/projects/${dashboard.project.id}`}>Mở hồ sơ <span aria-hidden>→</span></Link></section>
+      {!dashboard ? <section className="card p-8 text-center text-slate-500">Đang tải thông tin hồ sơ…</section> : <>
+        <section className="card flex flex-col justify-between gap-4 p-5 lg:flex-row lg:items-center"><div><div className="flex gap-2"><span className="badge badge-blue">{dashboard.project.code}</span><span className="badge badge-slate">{viLabel(dashboard.project.status)}</span><span className="badge badge-slate">{viLabel(dashboard.project.access)}</span></div><h2 className="mt-3 text-2xl font-bold">{dashboard.project.name}</h2><p className="mt-1 text-sm text-slate-500">{viLabel(dashboard.project.documentTypeCode)} · dữ liệu nghiệp vụ đã lưu</p></div><Link className="button button-primary" href={`/projects/${dashboard.project.id}`}>Mở hồ sơ <span aria-hidden>→</span></Link></section>
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Chỉ số hồ sơ">{metrics.map(([label, value]) => <article className="card p-4" key={String(label)}><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold">{value}</p></article>)}</section>
-        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Immutable history</p><h2>Phiên bản gần đây</h2></div><span className="badge badge-slate">{dashboard.recentVersions.length} phiên bản</span></div>{dashboard.recentVersions.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b text-xs uppercase text-slate-500"><th className="pb-3">Mã</th><th className="pb-3">Tên</th><th className="pb-3">Thời điểm khóa</th></tr></thead><tbody>{dashboard.recentVersions.map((version) => <tr className="border-b last:border-0" key={version.id}><td className="py-3 font-semibold text-blue-800">{version.code}</td><td className="py-3">{version.name}</td><td className="py-3 text-slate-500">{new Date(version.sealedAt).toLocaleString("vi-VN")}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-slate-500">Hồ sơ chưa có DraftVersion bất biến.</p>}</section>
+        <section className="card p-5"><div className="section-heading"><div><p className="eyebrow">Lịch sử không thể sửa đổi</p><h2>Phiên bản gần đây</h2></div><span className="badge badge-slate">{dashboard.recentVersions.length} phiên bản</span></div>{dashboard.recentVersions.length ? <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b text-xs uppercase text-slate-500"><th className="pb-3">Mã</th><th className="pb-3">Tên</th><th className="pb-3">Thời điểm khóa</th></tr></thead><tbody>{dashboard.recentVersions.map((version) => <tr className="border-b last:border-0" key={version.id}><td className="py-3 font-semibold text-blue-800">{version.code}</td><td className="py-3">{version.name}</td><td className="py-3 text-slate-500">{new Date(version.sealedAt).toLocaleString("vi-VN")}</td></tr>)}</tbody></table></div> : <p className="mt-4 text-sm text-slate-500">Hồ sơ chưa có phiên bản dự thảo đã khóa.</p>}</section>
       </>}
     </main><ProjectCreationDialog open={createOpen} onClose={()=>setCreateOpen(false)} onCreated={()=>location.reload()}/>
   </div>;

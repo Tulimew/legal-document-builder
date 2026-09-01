@@ -1,1 +1,1 @@
-import{SystemAdministration}from"@/components/administration/system-administration";export default function AdministrationPage(){return <SystemAdministration/>}
+import Link from"next/link";import{SystemAdministration}from"@/components/administration/system-administration";export default function AdministrationPage(){return <><SystemAdministration/><Link className="button button-primary fixed bottom-6 right-6 shadow-lg" href="/quan-tri/quy-tac-cau-truc">Quản lý quy tắc cấu trúc</Link></>}
