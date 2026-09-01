@@ -45,6 +45,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .toast { @apply fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xl; } .modal-backdrop { @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4; } .modal-card { @apply max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-5 shadow-2xl; }
   .desktop-note { @apply hidden; }
   .project-navigation,.mobile-action-strip { overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .project-progress { overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+  .project-progress-step { @apply flex w-52 shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-600; }
+  .project-progress-step small { @apply mt-0.5 block text-[10px] font-normal; }
+  .project-progress-number { @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 font-bold text-slate-700; }
+  .project-progress-step.completed { @apply border-emerald-200 bg-emerald-50 text-emerald-950; } .project-progress-step.completed .project-progress-number { @apply bg-emerald-600 text-white; }
+  .project-progress-step.active { @apply border-blue-400 bg-blue-50 text-blue-950 ring-2 ring-blue-100; } .project-progress-step.active .project-progress-number { @apply bg-blue-700 text-white; }
+  .project-progress-step.blocked { @apply border-amber-400 bg-amber-50 text-amber-950; } .project-progress-step.blocked .project-progress-number { @apply bg-amber-500 text-white; }
 }
 @media (max-width:900px) {
   .editor-shell { height:auto; min-height:100dvh; overflow:visible; }
