@@ -29,5 +29,14 @@ M15 adds a second, encrypted copy of each verified Synology backup on Google Dri
 - [x] Upload performs a remote content check.
 - [x] Independent download-and-check command is provided.
 - [x] No token, password or private key is stored in Git.
-- [ ] Real NAS Google Drive authorization completed.
-- [ ] Real encrypted upload/download and restore drill completed.
+- [x] Real NAS Google Drive authorization completed.
+- [x] Real encrypted upload/download and checksum verification completed.
+
+## Synology deployment evidence
+
+- Deployment time: 2026-09-01 (Asia/Saigon).
+- Verified bundle: `20260901T162031Z`.
+- PostgreSQL dump and publishing archive passed their original SHA-256 manifest after encrypted upload and download.
+- Application health and readiness remained successful after the drill.
+- The active Google Drive remote currently uses rclone's shared client ID. Rclone reports that this client ID is being retired during 2026; replacing it with an owner-controlled Google OAuth client is an operational follow-up.
+- Automated DSM scheduling and an end-to-end database restore from the downloaded offsite bundle remain separate operational acceptance items.
