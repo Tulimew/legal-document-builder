@@ -5,14 +5,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { ProjectCreationDialog } from "@/components/administration/project-creation-dialog";
+import { isAuthenticationFailure, loginPathFor } from "@/lib/auth-navigation";
 import { viLabel } from "@/lib/vietnamese-labels";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
 async function readData<T>(response: Response): Promise<T> {
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error?.message ?? "Không tải được dữ liệu.");
+  if (!response.ok) throw new ResponseError(response.status, body.error?.code, body.error?.message ?? "Không tải được dữ liệu.");
   return body.data as T;
+}
+
+class ResponseError extends Error {
+  constructor(readonly status: number, readonly code: string | undefined, message: string) {
+    super(message);
+  }
 }
 
 export function ProjectHome() {
@@ -41,6 +48,10 @@ export function ProjectHome() {
       })
       .catch((error: unknown) => {
         if (!active) return;
+        if (error instanceof ResponseError && isAuthenticationFailure(error.status, error.code)) {
+          window.location.replace(loginPathFor(`${window.location.pathname}${window.location.search}`));
+          return;
+        }
         setMessage(error instanceof Error ? error.message : "Không tải được danh sách hồ sơ.");
         setState("error");
       });
