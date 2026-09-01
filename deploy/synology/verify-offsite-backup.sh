@@ -33,4 +33,3 @@ test -f "$temporary/publishing.tar.gz"
 test -f "$temporary/SHA256SUMS"
 (cd "$temporary" && sha256sum -c SHA256SUMS)
 printf 'OFFSITE_BACKUP_VERIFIED remote=%s\n' "$source_path"
-

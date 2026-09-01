@@ -55,4 +55,3 @@ receipt="$bundle/OFFSITE-RECEIPT"
 } > "$receipt"
 
 printf 'OFFSITE_BACKUP_OK bundle=%s remote=%s\n' "$bundle" "$destination"
-
