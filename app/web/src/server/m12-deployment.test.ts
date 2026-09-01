@@ -9,7 +9,8 @@ test("M12 Synology compose keeps database private and mounts governed persistenc
   const compose = await readFile(path.join(root, "deploy/synology/compose.yaml"), "utf8");
   assert.match(compose, /postgres:18-bookworm/);
   assert.doesNotMatch(compose, /5432:5432/);
-  assert.match(compose, /127\.0\.0\.1:13108:3000/);
+  assert.match(compose, /192\.168\.1\.178:13108:3000/);
+  assert.doesNotMatch(compose, /0\.0\.0\.0:13108:3000/);
   assert.match(compose, /data\/postgres/);
   assert.match(compose, /data\/publishing/);
   assert.match(compose, /condition: service_completed_successfully/);
