@@ -29,3 +29,13 @@ test("development identity chỉ lấy actor từ header hợp lệ", () => {
     else process.env.AUTH_MODE = previous;
   }
 });
+
+test("development headers fail closed outside development mode", () => {
+  const previous = process.env.AUTH_MODE;
+  process.env.AUTH_MODE = "production";
+  try {
+    assert.throws(() => authenticate(new Headers({ "x-development-user-id": "00000000-0000-4000-8000-000000000101" })), (error: unknown) => error instanceof AppError && error.code === "AUTH_NOT_CONFIGURED");
+  } finally {
+    if (previous === undefined) delete process.env.AUTH_MODE; else process.env.AUTH_MODE = previous;
+  }
+});

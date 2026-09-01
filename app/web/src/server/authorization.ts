@@ -3,6 +3,24 @@ import type { Pool } from "pg";
 
 import { AppError } from "./errors";
 
+export const canonicalPermissionMatrix = Object.freeze({
+  "workspace:read": "WORKSPACE_READ",
+  "workspace:save": "WORKSPACE_EDIT",
+  "comment:list": "COMMENT_READ",
+  "comment:create": "COMMENT_CREATE",
+  "resolution:create": "COMMENT_RESOLVE",
+  "workflow:read": "WORKFLOW_READ",
+  "workflow:manage": "WORKFLOW_MANAGE",
+  "branch:read": "DRAFT_BRANCH_READ",
+  "branch:create": "DRAFT_BRANCH_CREATE",
+  "merge:analyze": "DRAFT_MERGE_ANALYZE",
+  "merge:resolve": "DRAFT_MERGE_RESOLVE",
+  "merge:complete": "DRAFT_MERGE_COMPLETE",
+  "publishing:request": "PUBLISHING_REQUEST",
+  "release:seal": "RELEASE_PACKAGE_SEAL",
+  "operations:read": "PROJECT_AUDIT_READ",
+} satisfies Record<string, BaselinePermissionCode>);
+
 interface GrantRow { membership_id:string; delegation_id:string|null; person_id:string|null }
 
 export async function authorizeProject(
