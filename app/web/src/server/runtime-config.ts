@@ -3,6 +3,7 @@ import path from "node:path";
 import { AppError } from "./errors";
 
 export type RuntimeConfig = {
+  applicationEnvironment: "development" | "test";
   database: { connectionString: string; poolMax: number };
   auth: { mode: "development"; developmentBypassAuthorization: boolean };
   storage: { adapter: "filesystem"; root: string };
@@ -61,11 +62,16 @@ export function readStorageRuntimeConfig(env: NodeJS.ProcessEnv = process.env): 
 }
 
 export function readRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig {
+  const applicationEnvironment = (env.APP_ENV?.trim() || (env.NODE_ENV === "test" ? "test" : "development"));
+  if (applicationEnvironment !== "development" && applicationEnvironment !== "test") {
+    throw new AppError("AUTH_NOT_CONFIGURED", "Production identity adapter chưa được cấu hình.");
+  }
   const authMode = required(env, "AUTH_MODE");
   if (authMode !== "development") {
     throw new AppError("AUTH_NOT_CONFIGURED", "Production identity adapter chưa được cấu hình.");
   }
   return {
+    applicationEnvironment,
     database: readDatabaseRuntimeConfig(env),
     auth: {
       mode: "development",
@@ -82,9 +88,23 @@ export function readRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Runtime
 
 export function publicRuntimeSummary(config: RuntimeConfig) {
   return {
+    applicationEnvironment: config.applicationEnvironment,
     authMode: config.auth.mode,
     authorizationBypass: config.auth.developmentBypassAuthorization,
     storageAdapter: config.storage.adapter,
     workerConfigured: true,
   };
+}
+
+export type ProductionConfigurationAssessment = {
+  ready: false;
+  blockers: Array<"PRODUCTION_IDENTITY_ADAPTER_REQUIRED" | "DEVELOPMENT_AUTHORIZATION_BYPASS_FORBIDDEN" | "ALLOWED_ORIGINS_REQUIRED">;
+};
+
+export function assessProductionConfiguration(env: NodeJS.ProcessEnv): ProductionConfigurationAssessment {
+  const blockers: ProductionConfigurationAssessment["blockers"] = [];
+  if (!env.AUTH_MODE || env.AUTH_MODE === "development") blockers.push("PRODUCTION_IDENTITY_ADAPTER_REQUIRED");
+  if (env.AUTH_DEVELOPMENT_BYPASS_AUTHORIZATION === "true") blockers.push("DEVELOPMENT_AUTHORIZATION_BYPASS_FORBIDDEN");
+  if (!env.HTTP_ALLOWED_ORIGINS?.trim()) blockers.push("ALLOWED_ORIGINS_REQUIRED");
+  return { ready: false, blockers };
 }

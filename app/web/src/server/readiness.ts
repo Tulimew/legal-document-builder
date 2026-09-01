@@ -3,7 +3,7 @@ import type { Pool } from "pg";
 import { AppError } from "./errors";
 import type { StoragePort } from "./storage-port";
 
-export const REQUIRED_MIGRATION = "0024_m8_product_operations_permissions.sql";
+export const REQUIRED_MIGRATION = "0025_m10_security_audit_integrity.sql";
 
 export type ReadinessResult = {
   status: "ready";
