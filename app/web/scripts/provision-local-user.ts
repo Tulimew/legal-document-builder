@@ -5,6 +5,7 @@ import { Pool } from "pg";
 
 import { hashLocalPassword } from "../src/server/local-identity";
 
+async function main(): Promise<void> {
 const [usernameInput, displayNameInput] = process.argv.slice(2);
 const password = process.env.LEGAL_BUILDER_INITIAL_PASSWORD;
 if (!usernameInput || !displayNameInput || !password) throw new Error("Usage: LEGAL_BUILDER_INITIAL_PASSWORD=<secret> npm.cmd run auth:provision -- <username> <display-name>");
@@ -24,3 +25,9 @@ try {
   console.log(JSON.stringify({ created: true, userId, username, membershipRequired: true }));
 } catch (error) { await client.query("ROLLBACK"); throw error; }
 finally { client.release(); await pool.end(); }
+}
+
+main().catch((error: unknown) => {
+  process.stderr.write(`${error instanceof Error ? error.message : "Provisioning failed"}\n`);
+  process.exitCode = 1;
+});
