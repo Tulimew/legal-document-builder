@@ -1,6 +1,6 @@
 # M14 Completion Report
 
-> Trạng thái: **READY TO COMMIT**
+> Trạng thái: **MERGED AND DEPLOYED**
 
 ## Capability
 
@@ -26,3 +26,13 @@
 - Nhập tự động DOCX/PDF/OCR chưa có; M14 cung cấp nhập cấu trúc thủ công có kiểm soát.
 - Nội dung pháp luật thực tế và RuleSet chính thức vẫn phải do người có thẩm quyền khai báo/phê duyệt.
 - Các route nguyên mẫu lịch sử không phải canonical product route chưa được coi là production UI.
+
+## NAS deployment evidence — 2026-09-01
+
+- Merge/image release: `b57544cff400fc9ea912de8ee2436f9825136163` / `legal-document-builder:b57544c`.
+- Backup production state và SHA-256 verification hoàn tất trước build.
+- Migration ledger xác nhận `0028_m14_ruleset_and_source_ingestion.sql`.
+- PostgreSQL healthy; web và worker chạy image M14.
+- Kiểm tra độc lập từ PC: health `alive`, readiness `ready`, database/migrations/storage đều `ready`, trang đăng nhập LAN HTTP 200.
+- Lần kết nối đầu trong thời gian container vừa khởi động bị reset; bounded retry sau đó thành công. Không bỏ qua readiness gate.
+- Chưa tuyên bố TLS public verified; vấn đề certificate hostname của DSM reverse proxy vẫn là hạng mục vận hành riêng.
