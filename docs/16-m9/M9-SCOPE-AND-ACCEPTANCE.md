@@ -1,6 +1,6 @@
 # M9 — Deployment-neutral Pilot Operations Foundation
 
-> Trạng thái: **OWNER-AUTHORIZED AUTONOMOUS IMPLEMENTATION**
+> Trạng thái: **IMPLEMENTATION COMPLETE — READY TO MERGE**
 >
 > Baseline: `main` tại merge commit M8 `dfe59a2aa33be997d6b7b55b1d4f18f388efaf9a`.
 
@@ -59,33 +59,33 @@ M9 không chứng nhận production, không chọn IAM/SSO, NAS/S3, secrets plat
 
 ### Configuration and health
 
-- [ ] Invalid/missing production-sensitive config fail closed với lỗi có thể hành động.
-- [ ] Liveness không tiết lộ dependency; readiness phản ánh database/migration/storage thật.
-- [ ] Response/log không chứa password, connection URL, storage root hay business payload.
+- [x] Invalid/missing production-sensitive config fail closed với lỗi có thể hành động.
+- [x] Liveness không tiết lộ dependency; readiness phản ánh database/migration/storage thật.
+- [x] Response/log không chứa password, connection URL, storage root hay business payload.
 
 ### Worker
 
-- [ ] Worker chạy độc lập, poll có giới hạn và graceful shutdown.
-- [ ] Concurrent claim, expired lease, retry và terminal failure giữ nguyên evidence M7.
-- [ ] HTTP request path không phải scheduler nền.
+- [x] Worker chạy độc lập, poll có giới hạn và graceful shutdown.
+- [x] Concurrent claim, expired lease, retry và terminal failure giữ nguyên evidence M7.
+- [x] HTTP request path không phải scheduler nền.
 
 ### Recovery drill
 
-- [ ] Chỉ cho phép source/target `_dev` và không ghi đè source.
-- [ ] Manifest/checksum đủ để phát hiện dump hoặc storage file thiếu/hỏng.
-- [ ] Restore verification chứng minh migration head và artifact lineage/checksum.
+- [x] Chỉ cho phép source/target `_dev` và không ghi đè source.
+- [x] Manifest/checksum đủ để phát hiện dump hoặc storage file thiếu/hỏng.
+- [x] Restore verification chứng minh migration head và artifact lineage/checksum.
 
 ### Operations UI/API
 
-- [ ] Chỉ actor có quyền mới đọc được operational status của project.
-- [ ] Backlog/failure counts đến từ PostgreSQL và bị scope theo project.
-- [ ] Không lộ secret, storage path hoặc nội dung nhạy cảm.
+- [x] Chỉ actor có quyền mới đọc được operational status của project.
+- [x] Backlog/failure counts đến từ PostgreSQL và bị scope theo project.
+- [x] Không lộ secret, storage path hoặc nội dung nhạy cảm.
 
 ### Quality
 
-- [ ] PostgreSQL integration chạy trên database mới migrate/seed.
-- [ ] `npm.cmd test`, `npm.cmd run lint`, `npm.cmd run build`, `git diff --check` pass.
-- [ ] Completion report phân biệt pilot-operable với production-ready.
+- [x] PostgreSQL integration chạy trên database mới migrate/seed.
+- [x] `npm.cmd test`, `npm.cmd run lint`, `npm.cmd run build`, `git diff --check` pass.
+- [x] Completion report phân biệt pilot-operable với production-ready.
 
 ## 5. Out of scope / mandatory stop points
 
