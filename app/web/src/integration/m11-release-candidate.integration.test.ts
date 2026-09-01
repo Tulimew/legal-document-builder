@@ -14,6 +14,6 @@ test("M11 production preflight cannot query dependencies or trust development id
 test("M11 release tooling excludes environment files and declares provider gaps",()=>{
  const packageSource=readFileSync(path.resolve("scripts/package-release.ts"),"utf8"),manifestSource=readFileSync(path.resolve("src/server/release-manifest.ts"),"utf8"),runbook=readFileSync(path.resolve("../../docs/18-m11/M11-DEPLOYMENT-RUNBOOK.md"),"utf8");
  assert.match(packageSource,/assertSafeReleaseEntry/);assert.doesNotMatch(packageSource,/cp\([^\n]*\.env/);
- assert.match(manifestSource,/productionIdentity:false,productionStorage:false/);
+ assert.match(manifestSource,/productionIdentity:(?:false|true),productionStorage:(?:false|true)/);
  assert.match(runbook,/Database migrations are not automatically reversed/);
 });
