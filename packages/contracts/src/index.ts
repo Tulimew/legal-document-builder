@@ -14,3 +14,4 @@ export * from "./iam";
 export * from "./deliberation";
 export * from "./meeting";
 export * from "./workflow";
+export * from "./administration";
