@@ -13,6 +13,9 @@
     "worker:publishing": "tsx scripts/run-publishing-worker.ts",
     "recovery:backup:development": "tsx scripts/backup-development.ts",
     "recovery:restore:development": "tsx scripts/restore-development.ts"
+    ,"deployment:preflight": "tsx scripts/deployment-preflight.ts"
+    ,"release:manifest": "tsx scripts/generate-release-manifest.ts"
+    ,"release:package": "tsx scripts/package-release.ts"
   },
   "dependencies": {
     "@legal-document-builder/contracts": "file:../../packages/contracts",
