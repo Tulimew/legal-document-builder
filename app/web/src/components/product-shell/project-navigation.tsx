@@ -12,6 +12,7 @@ export function ProjectNavigation({ projectId, active }: { projectId: string; ac
     ["branches", "Nhánh", `/projects/${projectId}/branches`],
     ["publishing", "Xuất bản", `/projects/${projectId}/publishing`],
     ["operations", "Tìm kiếm & hoạt động", `/projects/${projectId}/operations`],
+    ["ai", "Trợ lý AI", `/projects/${projectId}/ai`],
   ];
   return <><nav aria-label="Mô-đun hồ sơ" className="project-navigation border-b bg-white px-3 py-2 sm:px-5 sm:py-3"><div className="flex min-w-max gap-2">{items.map(([key, label, href]) => <Link aria-current={active === key ? "page" : undefined} className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold ${active === key ? "bg-blue-700 text-white" : "text-slate-700 hover:bg-slate-100"}`} href={href} key={key}>{label}</Link>)}</div></nav><ProjectProgressBar projectId={projectId}/></>;
 }
