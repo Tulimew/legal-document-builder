@@ -10,7 +10,9 @@
     "test": "tsx --test --test-concurrency=1 src/server/**/*.test.ts src/integration/**/*.test.ts",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed:development": "node scripts/seed-development.mjs",
-    "worker:publishing": "tsx scripts/run-publishing-worker.ts"
+    "worker:publishing": "tsx scripts/run-publishing-worker.ts",
+    "recovery:backup:development": "tsx scripts/backup-development.ts",
+    "recovery:restore:development": "tsx scripts/restore-development.ts"
   },
   "dependencies": {
     "@legal-document-builder/contracts": "file:../../packages/contracts",
