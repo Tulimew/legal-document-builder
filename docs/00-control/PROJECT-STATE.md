@@ -1,12 +1,12 @@
 # Project State
 
-- **Current milestone:** M11 — Release Candidate & Deployment Readiness
-- **Current phase:** Phase 5 complete; `READY TO MERGE` pending owner review
-- **Main baseline:** M10 merge `0829a642ce6031cae412722139fe4dfb7fbf646e`
-- **Branch:** `codex/m11-release-candidate-readiness`
-- **Migrations:** `0001`–`0025`; `0025` adds append-only, project-scoped security rejection evidence without historical backfill
-- **Test count:** 202/202 PASS on fresh PostgreSQL 18 database `legal_document_builder_m11_final_20260901_dev`
-- **Completed capabilities:** M10 baseline plus fail-closed production configuration assessment, read-only deployment preflight, redacted release manifest, standalone release packaging and deployment/recovery runbook
-- **Remaining capabilities:** M12 production IAM/TLS/WAF/secrets/NAS integrations; M13 browser/UAT, target recovery verification and go-live certification
-- **Open blockers:** none for M11 merge review; production provider selection remains a mandatory stop point for M12 and manual browser E2E remains deferred
-- **Last successful build:** M11 Phase 5 — fresh migrations/seed, 202 tests, preflight, lint, standalone build/package, dependency audit and diff-check PASS
+- **Current milestone:** M13 — Project & System Administration
+- **Current phase:** M13 complete — ready for merge and NAS rollout
+- **Main baseline:** M11 merge `9690d00fb9766c2db8e528c401fb017f1d8a433f`
+- **Branch:** `codex/m13-project-and-system-administration`
+- **Migrations:** `0001`–`0027`; `0027` adds global administration roles, system settings, audit, document-type catalog and project creation profiles without modifying historical snapshots
+- **Test count:** 213/213 PASS on fresh PostgreSQL 18 database `legal_document_builder_m13_suite_dev`
+- **Completed capabilities:** M12 baseline plus governed project creation, system/account/project-creator roles, local account creation, lock/unlock controls, project-role assignment and safe registration of amendment sources
+- **Remaining capabilities:** structured source ingestion/verification, membership termination or role supersede and password rotation UI are post-M13 backlog; NAS rollout is the current release action
+- **Open blockers:** none for M13 acceptance; unverified amendment sources intentionally cannot become targets
+- **Last successful build:** M13 Phase 2 — fresh migrations/seed and 213/213 tests PASS on PostgreSQL 18; lint/build gate PASS

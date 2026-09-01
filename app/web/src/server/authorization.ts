@@ -1,4 +1,4 @@
-import type { ActorRef, BaselinePermissionCode } from "@legal-document-builder/contracts";
+import type { ActorRef, BaselinePermissionCode, SystemPermissionCode } from "@legal-document-builder/contracts";
 import type { Pool } from "pg";
 
 import { AppError } from "./errors";
@@ -22,6 +22,23 @@ export const canonicalPermissionMatrix = Object.freeze({
 } satisfies Record<string, BaselinePermissionCode>);
 
 interface GrantRow { membership_id:string; delegation_id:string|null; person_id:string|null }
+
+export async function authorizeSystem(
+  pool: Pool,
+  actor: ActorRef,
+  permission: SystemPermissionCode,
+): Promise<ActorRef> {
+  const result = await pool.query(
+    `SELECT u.person_id FROM legal_builder.user_account u
+      JOIN legal_builder.user_system_role_assignment a ON a.user_id=u.id AND a.revoked_at IS NULL
+      JOIN legal_builder.system_role_definition r ON r.code=a.role_code AND r.status_code='ACTIVE'
+      JOIN legal_builder.system_role_permission p ON p.role_code=r.code
+      WHERE u.id=$1 AND u.status_code='ACTIVE' AND p.permission_code=$2 LIMIT 1`,
+    [actor.userId, permission],
+  );
+  if (!result.rowCount) throw new AppError("FORBIDDEN", "Bạn không có quyền quản trị hệ thống.");
+  return { userId: actor.userId, ...(result.rows[0].person_id ? { personId: String(result.rows[0].person_id) } : {}) };
+}
 
 export async function authorizeProject(
   pool: Pool,

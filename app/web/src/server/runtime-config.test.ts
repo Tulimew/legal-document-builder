@@ -23,7 +23,7 @@ test("runtime config validates bounded values and keeps secrets private", () => 
   assert.doesNotMatch(publicText, /secret|legal_builder_dev|runtime-test-storage/i);
 });
 
-test("production assessment is fail-closed and redacted until providers are configured", () => {
+test("production assessment is fail-closed and redacted until local identity is configured", () => {
   const assessment = assessProductionConfiguration({
     NODE_ENV: "production",
     APP_ENV: "production",
@@ -40,6 +40,18 @@ test("production assessment is fail-closed and redacted until providers are conf
   assert.doesNotMatch(JSON.stringify(assessment), /top-secret|postgresql:\/\//);
 });
 
+test("production runtime accepts approved local identity and external filesystem mount", () => {
+  const env = valid();
+  env.APP_ENV = "production";
+  env.AUTH_MODE = "local";
+  env.AUTH_SESSION_SECRET = "a-production-like-secret-with-32-characters";
+  env.HTTP_ALLOWED_ORIGINS = "https://legal-builder.example.invalid";
+  const config = readRuntimeConfig(env);
+  assert.equal(config.applicationEnvironment, "production");
+  assert.equal(config.auth.mode, "local");
+  assert.equal(assessProductionConfiguration(env).ready, true);
+});
+
 test("APP_ENV production cannot start with development identity", () => {
   const env = valid();
   env.APP_ENV = "production";
@@ -50,7 +62,7 @@ test("runtime config fails closed for invalid settings", () => {
   for (const mutate of [
     (env: NodeJS.ProcessEnv) => delete env.DATABASE_URL,
     (env: NodeJS.ProcessEnv) => { env.DATABASE_POOL_MAX = "0"; },
-    (env: NodeJS.ProcessEnv) => { env.AUTH_MODE = "production"; },
+    (env: NodeJS.ProcessEnv) => { env.AUTH_MODE = "unsupported"; },
     (env: NodeJS.ProcessEnv) => { env.PUBLISHING_STORAGE_ROOT = "relative"; },
   ]) {
     const env = valid();

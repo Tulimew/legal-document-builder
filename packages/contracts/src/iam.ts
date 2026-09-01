@@ -70,3 +70,24 @@ export type BaselinePermissionCode =
   | "PROJECT_SEARCH"
   | "PROJECT_AUDIT_READ"
   | "PROJECT_MEMBERSHIP_READ";
+
+export type SystemPermissionCode =
+  | "SYSTEM_CONFIG_READ"
+  | "SYSTEM_CONFIG_MANAGE"
+  | "USER_ACCOUNT_READ"
+  | "USER_ACCOUNT_MANAGE"
+  | "SYSTEM_ROLE_MANAGE"
+  | "PROJECT_CREATE";
+
+export type SystemRoleCode = "SYSTEM_ADMIN" | "ACCOUNT_ADMIN" | "PROJECT_CREATOR";
+
+export interface ManagedUserAccount {
+  contractVersion: ContractVersion;
+  id: EntityId;
+  username: string;
+  displayName: string;
+  status: "ACTIVE" | "LOCKED" | "DISABLED";
+  systemRoles: SystemRoleCode[];
+  createdAt: IsoDateTime;
+  lastAuthenticatedAt?: IsoDateTime;
+}

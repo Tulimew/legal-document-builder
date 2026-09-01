@@ -3,9 +3,9 @@ import path from "node:path";
 import { AppError } from "./errors";
 
 export type RuntimeConfig = {
-  applicationEnvironment: "development" | "test";
+  applicationEnvironment: "development" | "test" | "production";
   database: { connectionString: string; poolMax: number };
-  auth: { mode: "development"; developmentBypassAuthorization: boolean };
+  auth: { mode: "development" | "local"; developmentBypassAuthorization: boolean };
   storage: { adapter: "filesystem"; root: string };
   worker: { pollIntervalMs: number; idleBackoffMs: number; maxConsecutiveErrors: number };
 };
@@ -62,20 +62,23 @@ export function readStorageRuntimeConfig(env: NodeJS.ProcessEnv = process.env): 
 }
 
 export function readRuntimeConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig {
-  const applicationEnvironment = (env.APP_ENV?.trim() || (env.NODE_ENV === "test" ? "test" : "development"));
-  if (applicationEnvironment !== "development" && applicationEnvironment !== "test") {
-    throw new AppError("AUTH_NOT_CONFIGURED", "Production identity adapter chưa được cấu hình.");
-  }
+  const applicationEnvironmentValue = env.APP_ENV?.trim() || (env.NODE_ENV === "test" ? "test" : "development");
+  const applicationEnvironment = applicationEnvironmentValue as RuntimeConfig["applicationEnvironment"];
+  if (!["development", "test", "production"].includes(applicationEnvironment)) throw new AppError("CONFIGURATION_INVALID", "APP_ENV không hợp lệ.");
   const authMode = required(env, "AUTH_MODE");
-  if (authMode !== "development") {
+  if (authMode !== "development" && authMode !== "local") {
     throw new AppError("AUTH_NOT_CONFIGURED", "Production identity adapter chưa được cấu hình.");
   }
+  if (applicationEnvironment === "production" && authMode !== "local") throw new AppError("AUTH_NOT_CONFIGURED", "Production bắt buộc dùng AUTH_MODE=local.");
+  if (authMode === "local" && required(env, "AUTH_SESSION_SECRET").length < 32) throw new AppError("CONFIGURATION_INVALID", "AUTH_SESSION_SECRET phải có ít nhất 32 ký tự.");
+  const developmentBypassAuthorization = boolean(env, "AUTH_DEVELOPMENT_BYPASS_AUTHORIZATION", false);
+  if (applicationEnvironment === "production" && developmentBypassAuthorization) throw new AppError("CONFIGURATION_INVALID", "Production không cho phép bỏ qua authorization.");
   return {
     applicationEnvironment,
     database: readDatabaseRuntimeConfig(env),
     auth: {
-      mode: "development",
-      developmentBypassAuthorization: boolean(env, "AUTH_DEVELOPMENT_BYPASS_AUTHORIZATION", false),
+      mode: authMode,
+      developmentBypassAuthorization,
     },
     storage: readStorageRuntimeConfig(env),
     worker: {
@@ -97,14 +100,14 @@ export function publicRuntimeSummary(config: RuntimeConfig) {
 }
 
 export type ProductionConfigurationAssessment = {
-  ready: false;
+  ready: boolean;
   blockers: Array<"PRODUCTION_IDENTITY_ADAPTER_REQUIRED" | "DEVELOPMENT_AUTHORIZATION_BYPASS_FORBIDDEN" | "ALLOWED_ORIGINS_REQUIRED">;
 };
 
 export function assessProductionConfiguration(env: NodeJS.ProcessEnv): ProductionConfigurationAssessment {
   const blockers: ProductionConfigurationAssessment["blockers"] = [];
-  if (!env.AUTH_MODE || env.AUTH_MODE === "development") blockers.push("PRODUCTION_IDENTITY_ADAPTER_REQUIRED");
+  if (env.AUTH_MODE !== "local" || !env.AUTH_SESSION_SECRET || env.AUTH_SESSION_SECRET.length < 32) blockers.push("PRODUCTION_IDENTITY_ADAPTER_REQUIRED");
   if (env.AUTH_DEVELOPMENT_BYPASS_AUTHORIZATION === "true") blockers.push("DEVELOPMENT_AUTHORIZATION_BYPASS_FORBIDDEN");
   if (!env.HTTP_ALLOWED_ORIGINS?.trim()) blockers.push("ALLOWED_ORIGINS_REQUIRED");
-  return { ready: false, blockers };
+  return { ready: blockers.length === 0, blockers };
 }

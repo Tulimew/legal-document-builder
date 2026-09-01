@@ -1,6 +1,7 @@
 import type { ActorRef } from "@legal-document-builder/contracts";
 
 import { AppError } from "./errors";
+import { actorFromLocalSession } from "./local-identity";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -12,6 +13,7 @@ function optionalUuid(headers: Headers, name: string): string | undefined {
 }
 
 export function authenticate(headers: Headers): ActorRef {
+  if (process.env.AUTH_MODE === "local") return actorFromLocalSession(headers);
   if (process.env.AUTH_MODE !== "development") {
     throw new AppError(
       "AUTH_NOT_CONFIGURED",

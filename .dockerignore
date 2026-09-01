@@ -1,0 +1,11 @@
+.git
+**/node_modules
+**/.next
+**/coverage
+**/dist
+**/build
+**/.env*
+**/*.log
+**/*.dump
+**/*.bak
+work

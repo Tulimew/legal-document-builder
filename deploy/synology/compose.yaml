@@ -1,0 +1,57 @@
+name: legal-document-builder
+services:
+  postgres:
+    image: postgres:18-bookworm
+    restart: unless-stopped
+    env_file: /volume1/docker/legal-document-builder/config/postgres.env
+    volumes:
+      - /volume1/docker/legal-document-builder/data/postgres:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    image: ${LEGAL_BUILDER_IMAGE:?Set LEGAL_BUILDER_IMAGE}
+    env_file: /volume1/docker/legal-document-builder/config/runtime.env
+    command: ["node", "app/web/scripts/migrate.mjs"]
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [backend]
+    restart: "no"
+
+  web:
+    image: ${LEGAL_BUILDER_IMAGE:?Set LEGAL_BUILDER_IMAGE}
+    restart: unless-stopped
+    env_file: /volume1/docker/legal-document-builder/config/runtime.env
+    environment: { HOSTNAME: "0.0.0.0", PORT: "3000" }
+    command: ["node", "standalone/server.js"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    volumes:
+      - /volume1/docker/legal-document-builder/data/publishing:/var/lib/legal-builder/publishing
+    ports:
+      - "192.168.1.178:13108:3000"
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    image: ${LEGAL_BUILDER_IMAGE:?Set LEGAL_BUILDER_IMAGE}
+    restart: unless-stopped
+    env_file: /volume1/docker/legal-document-builder/config/runtime.env
+    command: ["app/web/node_modules/.bin/tsx", "app/web/scripts/run-publishing-worker.ts"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    volumes:
+      - /volume1/docker/legal-document-builder/data/publishing:/var/lib/legal-builder/publishing
+    networks: [backend]
+
+networks:
+  backend:
+    driver: bridge
