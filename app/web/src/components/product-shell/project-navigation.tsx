@@ -6,6 +6,7 @@ export function ProjectNavigation({ projectId, active }: { projectId: string; ac
     ["drafting", "Soạn thảo", `/projects/${projectId}/drafting`],
     ["workflow", "Quy trình", `/projects/${projectId}/workflow`],
     ["review", "Góp ý", `/projects/${projectId}/review`],
+    ["amendments", "Văn bản sửa đổi", `/projects/${projectId}/amendments`],
     ["comparison", "So sánh", `/projects/${projectId}/comparison`],
     ["branches", "Nhánh", `/projects/${projectId}/branches`],
     ["publishing", "Xuất bản", `/projects/${projectId}/publishing`],

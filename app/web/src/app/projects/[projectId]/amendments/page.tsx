@@ -1,0 +1,1 @@
+import{AmendmentSourceWorkbench}from"@/components/administration/amendment-source-workbench";type P={params:Promise<{projectId:string}>};export default async function AmendmentPage({params}:P){return <AmendmentSourceWorkbench projectId={(await params).projectId}/>}
