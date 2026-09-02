@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { ProjectCreationDialog } from "@/components/administration/project-creation-dialog";
 import { isAuthenticationFailure, loginPathFor } from "@/lib/auth-navigation";
 import { viLabel } from "@/lib/vietnamese-labels";
+import { AccountMenu } from "./account-menu";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
@@ -86,6 +87,7 @@ export function ProjectHome() {
   ] : [];
 
   return <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="fixed right-4 top-3 z-50"><AccountMenu /></div>
     <header className="border-b bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-700">Hệ thống hỗ trợ</p><h1 className="text-lg font-semibold">Xây dựng văn bản quy phạm pháp luật</h1></div><div className="flex gap-2">{canCreate&&<button className="button button-primary" onClick={()=>setCreateOpen(true)}>+ Tạo hồ sơ mới</button>}<Link className="button button-secondary" href="/quan-tri">Quản trị</Link></div></div></header>
     <main className="mx-auto max-w-7xl space-y-5 p-6">
       <section className="card p-5"><label className="text-sm font-semibold" htmlFor="project-selector">Hồ sơ được cấp quyền</label><select id="project-selector" className="mt-2 block w-full rounded-lg border border-slate-300 bg-white p-3" value={selectedId} onChange={(event) => { setMessage(""); setDashboard(null); setSelectedId(event.target.value); }}>{projects.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select>{message && <p className="mt-3 rounded bg-red-50 p-3 text-sm text-red-800">{message}</p>}</section>

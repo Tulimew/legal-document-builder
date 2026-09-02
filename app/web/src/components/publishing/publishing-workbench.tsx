@@ -34,7 +34,7 @@ export function PublishingWorkbench({ projectId }: { projectId: string }) {
       setJobs(jobData);
       setPackages(packageData);
     } catch (cause) {
-      setNotice(cause instanceof Error ? cause.message : "Không tải được publishing state.");
+      setNotice(cause instanceof Error ? cause.message : "Không tải được trạng thái tạo tài liệu.");
     }
   }, [projectId]);
 
@@ -53,14 +53,14 @@ export function PublishingWorkbench({ projectId }: { projectId: string }) {
     try {
       await post(`/api/v1/projects/${projectId}/publishing-jobs`, { artifactKind, sourceDraftVersionId: source, templateVersionId, idempotencyKey: crypto.randomUUID() });
       await load();
-      setNotice("Artifact đã được tạo và verify.");
-    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không tạo được artifact."); }
+      setNotice("Tài liệu đã được tạo và kiểm tra tính toàn vẹn.");
+    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không tạo được tài liệu."); }
   };
 
   const download = async (job: PublishingJob) => {
     if (!job.generatedDocumentId) return;
     const response = await fetch(`/api/v1/projects/${projectId}/generated-documents/${job.generatedDocumentId}/download`, { headers: editorHeaders() });
-    if (!response.ok) return setNotice("Không tải được artifact.");
+    if (!response.ok) return setNotice("Không tải được tài liệu.");
     const url = URL.createObjectURL(await response.blob());
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -73,15 +73,15 @@ export function PublishingWorkbench({ projectId }: { projectId: string }) {
     if (!job.generatedDocumentId) return;
     try {
       const result = await read<{ verified: boolean }>(await fetch(`/api/v1/projects/${projectId}/generated-documents/${job.generatedDocumentId}/verify`, { headers: editorHeaders() }));
-      setNotice(result.verified ? `Artifact ${job.generatedDocumentId} VERIFIED.` : "Artifact không hợp lệ.");
-    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không verify được artifact."); }
+      setNotice(result.verified ? "Tài liệu đã qua kiểm tra tính toàn vẹn." : "Tài liệu không còn hợp lệ.");
+    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không kiểm tra được tài liệu."); }
   };
 
   const verifyPackage = async (releasePackage: ReleasePackage) => {
     try {
       const result = await read<{ verified: boolean }>(await fetch(`/api/v1/projects/${projectId}/release-packages/${releasePackage.id}/verify`, { headers: editorHeaders() }));
-      setNotice(result.verified ? `Gói ${releasePackage.id} VERIFIED cả manifest và binary.` : "Gói không còn hợp lệ.");
-    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không verify được gói."); }
+      setNotice(result.verified ? "Gói hồ sơ và các tệp bên trong đã qua kiểm tra." : "Gói không còn hợp lệ.");
+    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không kiểm tra được gói."); }
   };
 
   const seal = async () => {
@@ -98,8 +98,8 @@ export function PublishingWorkbench({ projectId }: { projectId: string }) {
       for (const item of items) releasePackage = await post<ReleasePackage>(`/api/v1/projects/${projectId}/release-packages/${releasePackage.id}/items`, { ...item, expectedRevision: releasePackage.revision, itemOrder: releasePackage.revision });
       await post(`/api/v1/projects/${projectId}/release-packages/${releasePackage.id}/seal`, { expectedRevision: releasePackage.revision, authorityBasis: "Phê duyệt phát hành" });
       await load();
-      setNotice("Gói đã được seal với manifest checksum.");
-    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không seal được gói."); }
+      setNotice("Gói hồ sơ đã được khóa và ghi mã kiểm tra toàn vẹn.");
+    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Không khóa được gói hồ sơ."); }
   };
 
   return <main className="min-h-screen bg-slate-100 p-6"><div className="mx-auto max-w-5xl space-y-4">

@@ -12,7 +12,10 @@ const LABELS: Record<string,string> = {
   NONE:"Không có", INTERNAL_REFERENCE:"Tham chiếu nội bộ", EXTERNAL_REFERENCE:"Tham chiếu bên ngoài",
   NEW_DOCUMENT:"Xây dựng văn bản mới", AMEND_DOCUMENTS:"Sửa đổi, bổ sung văn bản",
   ORIGINAL:"Văn bản mới", AMENDING:"Văn bản sửa đổi, bổ sung",
-  SUCCEEDED:"Hoàn thành", FAILED:"Thất bại", QUEUED:"Đang chờ", RUNNING:"Đang xử lý",
+  SUCCEEDED:"Hoàn thành", FAILED:"Thất bại", QUEUED:"Đang chờ", RUNNING:"Đang xử lý", READY:"Sẵn sàng",
+  DRAFT:"Dự thảo", SEALED:"Đã khóa", AVAILABLE:"Sẵn có", CANCELLED:"Đã hủy", PENDING:"Đang chờ",
+  DRAFT_VERSION:"Phiên bản dự thảo", GENERATED_DOCUMENT:"Tài liệu được tạo", RELEASE_PACKAGE:"Gói hồ sơ",
+  COMMENT:"Ý kiến góp ý", LEGAL_NODE:"Nội dung pháp lý", AUDIT_EVENT:"Hoạt động được ghi nhận",
 };
 
 export function viLabel(code:string|undefined|null):string {
