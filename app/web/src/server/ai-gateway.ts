@@ -3,8 +3,9 @@ import { AppError } from "./errors";
 
 export type AiProviderCode = "OPENAI" | "GEMINI" | "ANTHROPIC";
 export type AiTaskCode = "REPORT_REVIEW_SUMMARY" | "REPORT_PROJECT_PROGRESS" | "CHECK_FORM_STRUCTURE" | "CHECK_CONSISTENCY" | "SUGGEST_EXPLANATION";
-export type AiSuggestionRequest = { provider: AiProviderCode; task: AiTaskCode; content: string; instruction?: string; consentConfirmed: true };
+export type AiSuggestionRequest = { provider: AiProviderCode; task: AiTaskCode; content: string; instruction?: string; consentConfirmed: true; templateCode?: string };
 export type AiSuggestionResult = { provider: AiProviderCode; model: string; suggestion: string; inputChecksum: string; outputChecksum: string };
+export type AiReportPrompt = { code: string; name: string; versionCode: string; instruction: string; legalBasis: { primary: { number: string; provision: string } } };
 type ProviderConfig = { code: AiProviderCode; model: string; key: string };
 
 const taskInstructions: Record<AiTaskCode, string> = {
@@ -35,13 +36,16 @@ export function parseAiSuggestionRequest(value: unknown): AiSuggestionRequest {
   if (!content || content.length > 20_000) throw new AppError("INVALID_REQUEST", "Nội dung gửi AI phải từ 1 đến 20.000 ký tự.");
   if (input.consentConfirmed !== true) throw new AppError("INVALID_REQUEST", "Phải xác nhận nội dung được phép gửi tới nhà cung cấp AI bên ngoài.");
   if (instruction.length > 2_000) throw new AppError("INVALID_REQUEST", "Yêu cầu bổ sung vượt quá 2.000 ký tự.");
-  return { provider, task, content, consentConfirmed: true, ...(instruction ? { instruction } : {}) };
+  const templateCode=String(input.templateCode??"").trim();
+  if(templateCode&&!/^[A-Z][A-Z0-9_]{2,80}$/.test(templateCode))throw new AppError("INVALID_REQUEST","Mã mẫu báo cáo AI không hợp lệ.");
+  return { provider, task, content, consentConfirmed: true, ...(instruction ? { instruction } : {}), ...(templateCode?{templateCode}:{}) };
 }
 
-export async function requestAiSuggestion(request: AiSuggestionRequest, env: Partial<NodeJS.ProcessEnv> = process.env, requestFetch: typeof fetch = fetch): Promise<AiSuggestionResult> {
+export async function requestAiSuggestion(request: AiSuggestionRequest, env: Partial<NodeJS.ProcessEnv> = process.env, requestFetch: typeof fetch = fetch, reportPrompt?: AiReportPrompt): Promise<AiSuggestionResult> {
   const config = configs(env).find((value) => value.code === request.provider);
   if (!config) throw new AppError("INVALID_REQUEST", "Nhà cung cấp AI chưa được quản trị viên cấu hình khóa API và model.");
-  const prompt = `${taskInstructions[request.task]}${request.instruction ? `\nYêu cầu bổ sung: ${request.instruction}` : ""}\n\nNỘI DUNG DO NGƯỜI DÙNG CHỦ ĐỘNG CHỌN:\n${request.content}`;
+  const reportInstruction=reportPrompt?`Tạo DỰ THẢO ${reportPrompt.name}. Áp dụng mẫu phiên bản ${reportPrompt.versionCode}, căn cứ ${reportPrompt.legalBasis.primary.number}, ${reportPrompt.legalBasis.primary.provision}.\n${reportPrompt.instruction}\nMở đầu kết quả bằng nhãn: DỰ THẢO DO AI HỖ TRỢ - CHƯA ĐƯỢC PHÊ DUYỆT.`:"";
+  const prompt = `${reportInstruction||taskInstructions[request.task]}${request.instruction ? `\nYêu cầu bổ sung: ${request.instruction}` : ""}\n\nNỘI DUNG DO NGƯỜI DÙNG CHỦ ĐỘNG CHỌN:\n${request.content}`;
   const suggestion = config.code === "OPENAI" ? await openAi(config, prompt, requestFetch) : config.code === "GEMINI" ? await gemini(config, prompt, requestFetch) : await anthropic(config, prompt, requestFetch);
   if (!suggestion.trim()) throw new AppError("INTERNAL_ERROR", "Nhà cung cấp AI không trả về nội dung đề xuất.");
   return { provider: config.code, model: config.model, suggestion: suggestion.trim(), inputChecksum: checksum(request.content), outputChecksum: checksum(suggestion.trim()) };
