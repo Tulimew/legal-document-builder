@@ -1,0 +1,3 @@
+import assert from "node:assert/strict"; import test from "node:test"; import { decryptApiKey, encryptApiKey } from "./ai-provider-repository";
+test("AI provider API key is AES-GCM encrypted and round-trips only with master key",()=>{const env={AI_SECRET_ENCRYPTION_KEY:"a-secure-test-master-key-with-32-characters"},encrypted=encryptApiKey("provider-secret-key",env);assert.ok(!encrypted.includes("provider-secret-key"));assert.equal(decryptApiKey(encrypted,env),"provider-secret-key");assert.throws(()=>decryptApiKey(encrypted,{AI_SECRET_ENCRYPTION_KEY:"a-different-secure-master-key-32-chars"}))});
+test("AI provider encryption requires server master key",()=>assert.throws(()=>encryptApiKey("provider-secret-key",{})));

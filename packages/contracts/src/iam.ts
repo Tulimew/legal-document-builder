@@ -79,7 +79,8 @@ export type SystemPermissionCode =
   | "SYSTEM_ROLE_MANAGE"
   | "PROJECT_CREATE"
   | "RULESET_READ"
-  | "RULESET_MANAGE";
+  | "RULESET_MANAGE"
+  | "AI_PROVIDER_MANAGE";
 
 export type SystemRoleCode = "SYSTEM_ADMIN" | "ACCOUNT_ADMIN" | "PROJECT_CREATOR";
 
