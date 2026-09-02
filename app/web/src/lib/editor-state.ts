@@ -24,8 +24,23 @@ export function replaceNodeContent(document: LegalDocumentSnapshot, nodeId: stri
 }
 
 const nextOrderKey=(nodes:LegalNode[],parentNodeId:string|null)=>String(Math.max(0,...nodes.filter(node=>node.parentNodeId===parentNodeId).map(node=>Number.parseInt(node.orderKey,10)||0))+1).padStart(4,"0");
+export const legalStructureHierarchy:Record<string,string[]>={
+  ROOT:["PART","CHAPTER","SECTION","SUBSECTION","ARTICLE","OTHER"],
+  PART:["CHAPTER","SECTION","ARTICLE","OTHER"],
+  CHAPTER:["SECTION","SUBSECTION","ARTICLE","OTHER"],
+  SECTION:["SUBSECTION","ARTICLE","OTHER"],
+  SUBSECTION:["ARTICLE","OTHER"],
+  ARTICLE:["CLAUSE","OTHER"],
+  CLAUSE:["POINT","OTHER"],
+  POINT:["OTHER"],
+  OTHER:["OTHER"],
+};
+export function allowedChildNodeTypes(parentType:string|null):string[]{return legalStructureHierarchy[parentType??"ROOT"]??[]}
+export function canPlaceLegalNode(nodeType:string,parentType:string|null):boolean{return allowedChildNodeTypes(parentType).includes(nodeType)}
+function assertLegalPlacement(nodeType:string,parentType:string|null):void{if(!canPlaceLegalNode(nodeType,parentType))throw new Error(`UNSUPPORTED STRUCTURED OPERATION: không thể đặt ${nodeType} dưới ${parentType??"cấp gốc"}.`)}
 export function addLegalNode(document:LegalDocumentSnapshot,parentNodeId:string|null,nodeTypeCode:string,title?:string):LegalDocumentSnapshot{
   if(parentNodeId!==null&&!document.nodes.some(node=>node.id===parentNodeId))throw new Error("UNSUPPORTED STRUCTURED OPERATION: parent không tồn tại.");
+  assertLegalPlacement(nodeTypeCode,document.nodes.find(node=>node.id===parentNodeId)?.nodeTypeCode??null);
   const node:LegalNode={id:crypto.randomUUID(),nodeTypeCode,parentNodeId,orderKey:nextOrderKey(document.nodes,parentNodeId),...(title?.trim()?{title:title.trim()}:{}),content:[{kind:"PARAGRAPH",spans:[{text:""}]}],metadata:{},lifecycleStatus:"ACTIVE"};return{...document,nodes:[...document.nodes,node]};
 }
 export function deleteLegalNode(document:LegalDocumentSnapshot,nodeId:string):LegalDocumentSnapshot{
@@ -34,6 +49,7 @@ export function deleteLegalNode(document:LegalDocumentSnapshot,nodeId:string):Le
 export function moveLegalNode(document:LegalDocumentSnapshot,nodeId:string,parentNodeId:string|null,orderKey?:string):LegalDocumentSnapshot{
   const node=document.nodes.find(item=>item.id===nodeId);if(!node)throw new Error("UNSUPPORTED STRUCTURED OPERATION: LegalNode không tồn tại.");if(parentNodeId===nodeId)throw new Error("UNSUPPORTED STRUCTURED OPERATION: node không thể là parent của chính nó.");
   let cursor=parentNodeId;while(cursor){if(cursor===nodeId)throw new Error("UNSUPPORTED STRUCTURED OPERATION: thao tác tạo chu trình.");cursor=document.nodes.find(item=>item.id===cursor)?.parentNodeId??null}
+  assertLegalPlacement(node.nodeTypeCode,document.nodes.find(item=>item.id===parentNodeId)?.nodeTypeCode??null);
   const targetOrder=orderKey??nextOrderKey(document.nodes.filter(item=>item.id!==nodeId),parentNodeId);if(document.nodes.some(item=>item.id!==nodeId&&item.parentNodeId===parentNodeId&&item.orderKey===targetOrder))throw new Error("UNSUPPORTED STRUCTURED OPERATION: orderKey đã được sử dụng cùng parent.");
   return{...document,nodes:document.nodes.map(item=>item.id===nodeId?{...item,parentNodeId,orderKey:targetOrder}:item)};
 }
