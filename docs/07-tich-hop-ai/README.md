@@ -1,5 +1,9 @@
 # Tích hợp AI
 
+AI trong import DOCX chỉ là bộ đề xuất cấu trúc tùy chọn. Đầu ra được giới hạn ở loại nút, quan hệ cha-con, số hiển thị nhận diện và cảnh báo; nội dung phải lấy nguyên văn từ bộ trích xuất DOCX. AI không được viết lại, sửa chính tả, bổ sung nội dung, tự xác nhận hiệu lực hoặc tự công bố phiên bản nguồn.
+
+Module import, lưu file/checksum, kiểm tra bảo toàn, hiệu chỉnh thủ công, kiểm chứng và AuditEvent thuộc hệ thống. Có thể thay adapter AI bằng bộ quy tắc, mô hình nội bộ hoặc thao tác thủ công mà không thay đổi dữ liệu nghiệp vụ.
+
 Lưu phạm vi hỗ trợ của AI, nguyên tắc giám sát của con người, yêu cầu bảo mật, phương án tích hợp, đánh giá chất lượng và cơ chế hoạt động khi không có AI.
 
 ## Baseline tích hợp API

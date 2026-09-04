@@ -41,6 +41,10 @@ Quản lý văn bản nền, phạm vi điều khoản dự kiến thay đổi, 
 
 ## 5. Phạm vi phiên bản đầu tiên
 
+Phiên bản đầu quản lý danh mục nhiều hồ sơ, cho phép người có quyền đổi tên, mô tả và trạng thái vòng đời mà không xóa lịch sử. Trang chủ hệ thống tổng hợp danh mục dự án; số liệu chi tiết thuộc tổng quan từng hồ sơ.
+
+Nguồn tài liệu nhập vào hệ thống giới hạn ở `.docx`. Việc chuyển đổi PDF hoặc định dạng khác sang DOCX được thực hiện độc lập ngoài hệ thống. Hệ thống lưu DOCX nguyên bản, checksum và thông tin nguồn, sau đó bóc tách cấu trúc để người dùng kiểm chứng; không mặc nhiên coi DOCX hoặc kết quả bóc tách là chính xác pháp lý.
+
 - Quản lý hồ sơ xây dựng văn bản, người tham gia, vai trò và trạng thái.
 - Gán một phiên bản quy trình cho hồ sơ và theo dõi các bước, cổng kiểm soát, đầu vào, đầu ra.
 - Quản lý không giới hạn đợt góp ý, họp, chỉ đạo, chỉnh lý, trình và thẩm định trong phạm vi lưu trữ cho phép.

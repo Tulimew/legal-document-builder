@@ -11,6 +11,7 @@ function project(row: Row): AuthorizedProjectSummary {
     id: String(row.id),
     code: String(row.code),
     name: String(row.name),
+    ...(typeof (row.metadata as Record<string,unknown>|undefined)?.description==="string"?{description:String((row.metadata as Record<string,unknown>).description)}:{}),
     documentTypeCode: String(row.document_type_code),
     status: String(row.status_code),
     createdAt: new Date(String(row.created_at)).toISOString(),

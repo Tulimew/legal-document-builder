@@ -69,7 +69,8 @@ export type BaselinePermissionCode =
   | "RELEASE_PACKAGE_READ"
   | "PROJECT_SEARCH"
   | "PROJECT_AUDIT_READ"
-  | "PROJECT_MEMBERSHIP_READ";
+  | "PROJECT_MEMBERSHIP_READ"
+  | "PROJECT_MANAGE";
 
 export type SystemPermissionCode =
   | "SYSTEM_CONFIG_READ"

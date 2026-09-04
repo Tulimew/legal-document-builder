@@ -1,4 +1,4 @@
-import type { CreateLegalProjectRequest, ProjectCreationMode, SystemRoleCode } from "@legal-document-builder/contracts";
+import type { CreateLegalProjectRequest, ProjectCreationMode, SystemRoleCode, UpdateLegalProjectRequest } from "@legal-document-builder/contracts";
 
 import { AppError } from "../errors";
 
@@ -10,14 +10,15 @@ function object(value:unknown):Record<string,unknown>{if(!value||typeof value!==
 function text(value:unknown,label:string,max=200):string{if(typeof value!=="string"||!value.trim()||value.trim().length>max)throw new AppError("INVALID_REQUEST",`${label} không hợp lệ.`);return value.trim()}
 
 export function parseCreateProject(value:unknown,correlationId:string):CreateLegalProjectRequest{
- const v=object(value),code=text(v.code,"Mã hồ sơ",32).toUpperCase(),name=text(v.name,"Tên hồ sơ");
+ const v=object(value),code=text(v.code,"Mã hồ sơ",32).toUpperCase(),name=text(v.name,"Tên hồ sơ"),description=typeof v.description==="string"?v.description.trim().slice(0,2000):"";
  if(!PROJECT_CODE.test(code))throw new AppError("INVALID_REQUEST","Mã hồ sơ chỉ gồm chữ in hoa, số, dấu chấm, gạch ngang hoặc gạch dưới.");
  const documentTypeCode=text(v.documentTypeCode,"Loại văn bản",64).toUpperCase();
  if(v.creationMode!=="NEW_DOCUMENT"&&v.creationMode!=="AMEND_DOCUMENTS")throw new AppError("INVALID_REQUEST","Phương thức xây dựng văn bản không hợp lệ.");
  const creationMode=v.creationMode as ProjectCreationMode,targetDocumentCount=Number(v.targetDocumentCount??0);
  if(!Number.isInteger(targetDocumentCount)||(creationMode==="NEW_DOCUMENT"?targetDocumentCount!==0:targetDocumentCount<1||targetDocumentCount>100))throw new AppError("INVALID_REQUEST","Số văn bản được sửa đổi không hợp lệ.");
- return{contractVersion:"1.1",code,name,documentTypeCode,creationMode,targetDocumentCount,correlationId};
+ return{contractVersion:"1.1",code,name,description,documentTypeCode,creationMode,targetDocumentCount,correlationId};
 }
+export function parseUpdateProject(value:unknown,correlationId:string):UpdateLegalProjectRequest{const v=object(value),status=String(v.status) as UpdateLegalProjectRequest["status"];if(!["ACTIVE","PAUSED","COMPLETED","ARCHIVED"].includes(status))throw new AppError("INVALID_REQUEST","Trạng thái hồ sơ không hợp lệ.");return{contractVersion:"1.1",name:text(v.name,"Tên hồ sơ"),description:typeof v.description==="string"?v.description.trim().slice(0,2000):"",status,reason:text(v.reason,"Lý do thay đổi",500),correlationId}}
 
 export type ProjectAccountRoleClass="COMMENT_CONTRIBUTOR"|"DRAFTING_TEAM_LEAD"|"DRAFTER";
 export interface CreateManagedUserInput{username:string;displayName:string;password:string;systemRoles:SystemRoleCode[];projectAssignment?:{projectId:string;roleClass:ProjectAccountRoleClass}}

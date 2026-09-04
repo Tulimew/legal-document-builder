@@ -5,11 +5,14 @@ export interface AuthorizedProjectSummary {
   id: EntityId;
   code: string;
   name: string;
+  description?: string;
   documentTypeCode: string;
   status: string;
   createdAt: IsoDateTime;
   access: "MEMBERSHIP" | "DELEGATION";
 }
+
+export interface UpdateLegalProjectRequest { contractVersion:ContractVersion; name:string; description:string; status:"ACTIVE"|"PAUSED"|"COMPLETED"|"ARCHIVED"; reason:string; correlationId:string }
 
 export interface ProjectDashboard {
   contractVersion: ContractVersion;

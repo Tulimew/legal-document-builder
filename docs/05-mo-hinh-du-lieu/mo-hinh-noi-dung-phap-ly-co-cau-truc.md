@@ -90,6 +90,22 @@ Tên kỹ thuật, mức phân cấp, quan hệ cha-con và tính bắt buộc c
 
 ## 4. Quan hệ cây và ràng buộc cấu trúc
 
+Cây phiên bản 1 có đúng ba vùng gốc theo ngữ nghĩa: `DOCUMENT_HEADER` (Phần đầu), `DOCUMENT_BODY` (Phần nội dung) và `DOCUMENT_FOOTER` (Phần cuối). Đây không phải ba cấp đánh số pháp lý. Phần đầu chứa Quốc hiệu, Tiêu ngữ, cơ quan/tổ chức ban hành, số/ký hiệu, địa danh và thời gian ban hành; phần nội dung chứa tên loại, trích yếu và Chương, Mục, Tiểu mục, Điều, Khoản, Điểm; phần cuối chứa chức vụ, họ tên, chữ ký, dấu, nơi nhận và chỉ dẫn kỹ thuật. Thành phần cụ thể chỉ được sử dụng khi RuleSet đã kiểm chứng cho phép.
+
+“Phần đầu” không đồng nghĩa với một cấp cấu trúc “Phần” nằm trên Chương.
+
+### 4.1. Nguồn DOCX và hai loại liên kết
+
+`SourceDocument` phân biệt văn bản bị sửa đổi, văn bản làm căn cứ điều chỉnh và văn bản liên quan. Mỗi lần import tạo phiên bản nguồn mới, giữ DOCX nguyên bản, checksum, URL nguồn, ngày thu thập, cây `SourceLegalNode` đề xuất và trạng thái kiểm chứng; không ghi đè phiên bản cũ.
+
+Bộ nhập theo quy tắc phải giữ bảng trong DOCX thành khối `TABLE` có hàng và ô, không làm phẳng thành chuỗi đoạn. Cấu trúc nhận diện được vẫn là dữ liệu chưa kiểm chứng; các đặc điểm DOCX chưa ánh xạ được phải được cảnh báo để người nhập xử lý, không được âm thầm bỏ nội dung.
+
+Bộ nhập theo quy tắc phải giữ bảng trong DOCX thành khối `TABLE` có hàng và ô, không làm phẳng thành chuỗi đoạn. Cấu trúc nhận diện được vẫn là dữ liệu chưa kiểm chứng; các đặc điểm DOCX chưa ánh xạ được phải được cảnh báo để người nhập xử lý, không được âm thầm bỏ nội dung.
+
+`AmendmentOperation` mô tả nút của văn bản cũ bị dự thảo tác động. `ChangeBasisLink` là quan hệ độc lập, mô tả quy định hoặc tài liệu làm phát sinh nhu cầu thêm hay sửa một `LegalNode` của dự thảo. Nội dung bổ sung hoàn toàn mới vẫn truy nguyên được căn cứ dù không có nút cũ bị sửa.
+
+Liên kết dùng phiên bản nguồn và ID ổn định của `SourceLegalNode`; số Điều, Khoản, Điểm chỉ là nhãn hiển thị. Liên kết tạm tới vị trí file mang trạng thái chưa kiểm chứng và không được trình bày như căn cứ đã xác nhận.
+
 Mỗi phiên bản RuleSet xác định ma trận cấu trúc cho từng loại văn bản và phạm vi áp dụng:
 
 | Ràng buộc | Nội dung quản lý |

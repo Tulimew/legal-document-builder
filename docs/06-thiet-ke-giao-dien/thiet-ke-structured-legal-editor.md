@@ -28,6 +28,14 @@ Nút phát hành phải dùng nhãn phù hợp với quyền và giai đoạn, t
 
 ### 2.2. Cột trái - Cây cấu trúc
 
+Cây hiển thị ba vùng gốc `Phần đầu`, `Phần nội dung`, `Phần cuối`; đây là nhóm thành phần chuyên biệt, không phải cấp “Phần”. Thứ bậc nội dung chi tiết là Chương → Mục → Tiểu mục → Điều → Khoản → Điểm.
+
+Khi chọn một LegalNode, bảng thuộc tính có mục **Căn cứ phát sinh thay đổi**. Người dùng chọn văn bản, phiên bản nguồn và SourceLegalNode, sau đó ghi vai trò và giải thích. Trạng thái kiểm chứng hiển thị cùng liên kết. Chức năng này độc lập với giao diện tạo `AmendmentOperation` đối với văn bản bị sửa đổi.
+
+Màn hình **Kho văn bản dự án** phân loại văn bản bị sửa đổi, văn bản làm căn cứ và văn bản liên quan; chỉ nhận DOCX. Luồng gồm đăng ký nhận dạng → lưu DOCX/checksum → bóc tách → hiệu chỉnh → kiểm chứng. Nhập thủ công luôn khả dụng khi AI không có.
+
+Kết quả bóc tách giữ bảng dưới dạng hàng và ô để người dùng kiểm chứng. Sau khi tạo hồ sơ, hệ thống dẫn tới Kho văn bản dự án nhằm nhập các văn bản liên quan; với hồ sơ sửa đổi, người dùng phải đưa phiên bản văn bản gốc đã kiểm chứng vào phạm vi sửa đổi trước khi ánh xạ nội dung.
+
 - Hiển thị cây `LegalNode`, ID hỗ trợ kỹ thuật khi cần và số/tên hiển thị được tính.
 - Cho phép thêm Chương, Mục, Tiểu mục, Điều, Khoản, Điểm và loại nút khác thuộc cây phiên bản 1 khi RuleSet cho phép trong ngữ cảnh. Phần mở đầu được quản lý như nhóm thành phần chuyên biệt của đầu văn bản, không phải cấp cấu trúc Phần nằm trên Chương.
 - Tìm kiếm theo nội dung, số hiển thị, ID hoặc thuật ngữ.

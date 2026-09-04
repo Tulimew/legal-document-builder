@@ -12,6 +12,7 @@ export interface CreateLegalProjectRequest {
   contractVersion: ContractVersion;
   code: string;
   name: string;
+  description?: string;
   documentTypeCode: string;
   creationMode: ProjectCreationMode;
   targetDocumentCount: number;
