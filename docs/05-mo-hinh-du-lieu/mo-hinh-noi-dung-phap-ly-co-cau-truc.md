@@ -90,7 +90,7 @@ Tên kỹ thuật, mức phân cấp, quan hệ cha-con và tính bắt buộc c
 
 ## 4. Quan hệ cây và ràng buộc cấu trúc
 
-Cây phiên bản 1 có đúng ba vùng gốc theo ngữ nghĩa: `DOCUMENT_HEADER` (Phần đầu), `DOCUMENT_BODY` (Phần nội dung) và `DOCUMENT_FOOTER` (Phần cuối). Đây không phải ba cấp đánh số pháp lý. Phần đầu chứa Quốc hiệu, Tiêu ngữ, cơ quan/tổ chức ban hành, số/ký hiệu, địa danh và thời gian ban hành; phần nội dung chứa tên loại, trích yếu và Chương, Mục, Tiểu mục, Điều, Khoản, Điểm; phần cuối chứa chức vụ, họ tên, chữ ký, dấu, nơi nhận và chỉ dẫn kỹ thuật. Thành phần cụ thể chỉ được sử dụng khi RuleSet đã kiểm chứng cho phép.
+Cây phiên bản 1 có đúng ba vùng gốc theo ngữ nghĩa: `DOCUMENT_HEADER` (Phần đầu), `DOCUMENT_BODY` (Phần nội dung) và `DOCUMENT_FOOTER` (Phần cuối). Đây không phải ba cấp đánh số pháp lý. Phần đầu chứa tên văn bản, trích yếu, Quốc hiệu, Tiêu ngữ, cơ quan/tổ chức ban hành, số/ký hiệu, địa danh và thời gian ban hành; phần nội dung chứa Chương, Mục, Tiểu mục, Điều, Khoản, Điểm và các thành phần nội dung được phép; phần cuối chứa chức vụ, họ tên, chữ ký, dấu, nơi nhận và chỉ dẫn kỹ thuật. Thành phần cụ thể và quan hệ cha-con chỉ được sử dụng khi RuleSet đã kiểm chứng cho phép.
 
 “Phần đầu” không đồng nghĩa với một cấp cấu trúc “Phần” nằm trên Chương.
 

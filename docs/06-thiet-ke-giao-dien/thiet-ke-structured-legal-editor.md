@@ -28,7 +28,9 @@ Nút phát hành phải dùng nhãn phù hợp với quyền và giai đoạn, t
 
 ### 2.2. Cột trái - Cây cấu trúc
 
-Cây hiển thị ba vùng gốc `Phần đầu`, `Phần nội dung`, `Phần cuối`; đây là nhóm thành phần chuyên biệt, không phải cấp “Phần”. Thứ bậc nội dung chi tiết là Chương → Mục → Tiểu mục → Điều → Khoản → Điểm.
+Cây hiển thị ba vùng nghiệp vụ cố định `Phần đầu`, `Phần nội dung`, `Phần cuối`; đây là nhóm thành phần chuyên biệt, không phải cấp “Phần”. Mỗi vùng hiển thị trực tiếp các mục thuộc vùng đó thay vì sắp toàn bộ nút theo một danh sách phẳng. Phần đầu chứa tên văn bản, trích yếu, Quốc hiệu, Tiêu ngữ, cơ quan/tổ chức ban hành, số/ký hiệu, địa danh và thời gian ban hành. Nội dung các mục này được phép sửa nhưng cách trình bày do RuleSet và mẫu xuất đã kiểm chứng quyết định. Phần cuối chứa thông tin người ký, chữ ký, dấu, nơi nhận và chỉ dẫn kỹ thuật được phép.
+
+Khi chọn một vùng hoặc một mục, giao diện chỉ đưa ra các nút thao tác mang tên nghiệp vụ có thể thêm tại vị trí đó, chẳng hạn **Thêm Chương**, **Thêm Mục**, **Thêm Điều**. Không dùng các nhãn kỹ thuật “cấp gốc”, “cấp con”, “cấp cha” trong luồng thao tác chính. Thứ bậc nội dung chi tiết là Chương → Mục → Tiểu mục → Điều → Khoản → Điểm; quan hệ được phép trong từng ngữ cảnh phải lấy từ RuleSet đã gán cho hồ sơ.
 
 Khi chọn một LegalNode, bảng thuộc tính có mục **Căn cứ phát sinh thay đổi**. Người dùng chọn văn bản, phiên bản nguồn và SourceLegalNode, sau đó ghi vai trò và giải thích. Trạng thái kiểm chứng hiển thị cùng liên kết. Chức năng này độc lập với giao diện tạo `AmendmentOperation` đối với văn bản bị sửa đổi.
 

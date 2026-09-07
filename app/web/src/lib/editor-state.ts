@@ -26,8 +26,8 @@ export function replaceNodeContent(document: LegalDocumentSnapshot, nodeId: stri
 const nextOrderKey=(nodes:LegalNode[],parentNodeId:string|null)=>String(Math.max(0,...nodes.filter(node=>node.parentNodeId===parentNodeId).map(node=>Number.parseInt(node.orderKey,10)||0))+1).padStart(4,"0");
 export const legalStructureHierarchy:Record<string,string[]>={
   ROOT:["DOCUMENT_HEADER","DOCUMENT_BODY","DOCUMENT_FOOTER"],
-  DOCUMENT_HEADER:["NATIONAL_HEADER","MOTTO","ISSUING_AUTHORITY","DOCUMENT_NUMBER","PLACE_AND_DATE","OTHER"],
-  DOCUMENT_BODY:["DOCUMENT_TYPE_NAME","ABSTRACT","CHAPTER","SECTION","SUBSECTION","ARTICLE","ENFORCEMENT_PROVISION","ANNEX","OTHER"],
+  DOCUMENT_HEADER:["DOCUMENT_TYPE_NAME","ABSTRACT","NATIONAL_HEADER","MOTTO","ISSUING_AUTHORITY","DOCUMENT_NUMBER","PLACE_AND_DATE","OTHER"],
+  DOCUMENT_BODY:["CHAPTER","SECTION","SUBSECTION","ARTICLE","ENFORCEMENT_PROVISION","ANNEX","OTHER"],
   DOCUMENT_FOOTER:["SIGNATORY_TITLE","SIGNATORY_NAME","SIGNATURE","SEAL","RECIPIENTS","TECHNICAL_INSTRUCTION","OTHER"],
   CHAPTER:["SECTION","SUBSECTION","ARTICLE","OTHER"],
   SECTION:["SUBSECTION","ARTICLE","OTHER"],
@@ -42,7 +42,7 @@ export const legalStructureHierarchy:Record<string,string[]>={
 };
 export function allowedChildNodeTypes(parentType:string|null):string[]{return legalStructureHierarchy[parentType??"ROOT"]??[]}
 export function canPlaceLegalNode(nodeType:string,parentType:string|null):boolean{return allowedChildNodeTypes(parentType).includes(nodeType)}
-function assertLegalPlacement(nodeType:string,parentType:string|null):void{if(!canPlaceLegalNode(nodeType,parentType))throw new Error(`UNSUPPORTED STRUCTURED OPERATION: không thể đặt ${nodeType} dưới ${parentType??"cấp gốc"}.`)}
+function assertLegalPlacement(nodeType:string,parentType:string|null):void{if(!canPlaceLegalNode(nodeType,parentType))throw new Error(`UNSUPPORTED STRUCTURED OPERATION: không thể đặt ${nodeType} trong ${parentType??"văn bản"}.`)}
 export function addLegalNode(document:LegalDocumentSnapshot,parentNodeId:string|null,nodeTypeCode:string,title?:string):LegalDocumentSnapshot{
   if(parentNodeId!==null&&!document.nodes.some(node=>node.id===parentNodeId))throw new Error("UNSUPPORTED STRUCTURED OPERATION: parent không tồn tại.");
   assertLegalPlacement(nodeTypeCode,document.nodes.find(node=>node.id===parentNodeId)?.nodeTypeCode??null);
