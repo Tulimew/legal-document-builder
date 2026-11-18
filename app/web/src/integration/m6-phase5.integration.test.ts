@@ -69,8 +69,8 @@ test("M6 Phase 5 structured authoring survives fork and merge end-to-end", async
   const completed = await new PostgresMergeCompletionRepository(pool).complete(projectId, operation.id, { contractVersion: "1.1", expectedTargetWorkspaceRevision: operation.targetWorkspaceRevision, previewToken: operation.previewChecksum, versionCode: `M6-M-${suffix}`, versionName: "M6 structured merged version", reason: "Chứng minh compatibility M5/M6", authorityBasis: "M6 approved scope", correlationId: `m6-complete-${suffix}` }, completionActor);
 
   await t.test("merged snapshot keeps structured conflict and non-conflicting changes", async () => {
-    const version = (await pool.query("SELECT document_snapshot,snapshot_checksum_sha256 FROM legal_builder.draft_version WHERE id=$1", [completed.draftVersionId])).rows[0];
-    assert.equal(verifyCanonicalSha256(version.document_snapshot, String(version.snapshot_checksum_sha256).trim()), true);
+    const version = (await pool.query("SELECT document_snapshot,snapshot_checksum_sha256,snapshot_checksum_algorithm_code FROM legal_builder.draft_version WHERE id=$1", [completed.draftVersionId])).rows[0];
+    assert.equal(verifyCanonicalSha256(version.document_snapshot, String(version.snapshot_checksum_sha256).trim(), String(version.snapshot_checksum_algorithm_code)), true);
     assert.match(canonicalJson(version.document_snapshot.nodes.find((node: { id: string }) => node.id === ours.nodes[0].id).content), /MANUAL/);
     assert.match(canonicalJson(version.document_snapshot.nodes.find((node: { id: string }) => node.id === ours.nodes[1].id).content), /nhánh đích/);
     assert.match(canonicalJson(version.document_snapshot.nodes.find((node: { id: string }) => node.id === ours.nodes[2].id).content), /nhánh nguồn/);

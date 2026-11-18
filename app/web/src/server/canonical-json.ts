@@ -1,16 +1,56 @@
 import { createHash } from "node:crypto";
 
+/** Official algorithm identifier conforming to RFC 8785 (JCS). */
+export const CANONICAL_CHECKSUM_ALGORITHM = "RFC8785_JCS" as const;
+
+/** Legacy V1 algorithm identifier (historical snapshots created before RFC 8785 migration). */
+export const LEGACY_CANONICAL_CHECKSUM_ALGORITHM = "CANONICAL_JSON_V1_SHA256" as const;
+
+/** Legacy pre-M3 algorithm identifier (plain JSON.stringify). */
+export const LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM = "LEGACY_JSON_STRINGIFY_SHA256" as const;
+
+/** Closed allow-list of official checksum algorithm markers (no undocumented aliases permitted). */
+export const SUPPORTED_CHECKSUM_ALGORITHMS = [
+  CANONICAL_CHECKSUM_ALGORITHM,
+  LEGACY_CANONICAL_CHECKSUM_ALGORITHM,
+  LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM,
+] as const;
+
+export type SupportedChecksumAlgorithm = (typeof SUPPORTED_CHECKSUM_ALGORITHMS)[number];
+
+export interface ChecksumEnvelope {
+  readonly canonicalJson: string;
+  readonly checksumSha256: string;
+  readonly algorithmCode: SupportedChecksumAlgorithm;
+}
+
+export interface HistoricalFallbackContext {
+  readonly reason: string;
+  readonly scope: string;
+}
+
+export interface HistoricalFallbackVerificationResult {
+  readonly verified: boolean;
+  readonly matchedAlgorithm: SupportedChecksumAlgorithm | null;
+  readonly usedFallback: boolean;
+  readonly reason: string;
+  readonly scope: string;
+  readonly attemptedAlgorithms: readonly SupportedChecksumAlgorithm[];
+}
+
+export function isSupportedChecksumAlgorithm(algorithm: string): algorithm is SupportedChecksumAlgorithm {
+  return (SUPPORTED_CHECKSUM_ALGORITHMS as readonly string[]).includes(algorithm);
+}
+
 /**
- * Validates that a string does not contain lone high or low surrogates.
- * RFC 8785 Section 3.2.2.2 requires valid Unicode code points (scalar values).
- * UTF-16 code units in range 0xD800..0xDFFF must form valid surrogate pairs.
+ * Validates that a string contains only valid Unicode scalar values (no lone surrogates).
+ * RFC 8785 Section 3.2.2.2 requires rejecting invalid Unicode strings such as lone surrogates.
  * Note: Does NOT perform NFC or NFD normalization.
  */
 function validateUnicodeString(str: string, context: string): void {
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i);
     if (code >= 0xd800 && code <= 0xdbff) {
-      // High surrogate: must be followed by a low surrogate (0xDC00..0xDFFF)
       if (i + 1 >= str.length) {
         throw new TypeError(`Chuỗi Unicode không hợp lệ trong ${context}: lone high surrogate tại vị trí ${i}.`);
       }
@@ -20,7 +60,6 @@ function validateUnicodeString(str: string, context: string): void {
       }
       i++; // Skip paired low surrogate
     } else if (code >= 0xdc00 && code <= 0xdfff) {
-      // Lone low surrogate (not preceded by high surrogate)
       throw new TypeError(`Chuỗi Unicode không hợp lệ trong ${context}: lone low surrogate tại vị trí ${i}.`);
     }
   }
@@ -28,11 +67,10 @@ function validateUnicodeString(str: string, context: string): void {
 
 /**
  * Checks whether an object is a plain JSON object (Object.prototype or null prototype).
- * Rejects Date, Map, Set, Buffer, TypedArray, RegExp, class instances, etc.
+ * Rejects Date, Map, Set, RegExp, Buffer, TypedArray, boxed primitives, and class instances.
  */
 function isPlainJsonObject(val: object): val is Record<string, unknown> {
-  if (val === null) return false;
-  if (Array.isArray(val)) return false;
+  if (val === null || Array.isArray(val)) return false;
   if (val instanceof Date) return false;
   if (val instanceof Map || val instanceof Set) return false;
   if (val instanceof RegExp) return false;
@@ -45,6 +83,16 @@ function isPlainJsonObject(val: object): val is Record<string, unknown> {
 
 /**
  * RFC 8785 JSON Canonicalization Scheme (JCS) serializer with strict JSON data model validation.
+ *
+ * Rejected constructs (TypeError):
+ * - undefined (top-level, object property value, or array element)
+ * - sparse arrays (holes) and arrays with extra own properties, symbol keys, or accessors
+ * - symbol-keyed properties, non-enumerable own properties, and getter/setter accessors on objects
+ * - non-plain objects (Date, Map, Set, Buffer, TypedArray, RegExp, boxed primitives, class instances)
+ * - non-finite numbers (NaN, Infinity, -Infinity)
+ * - BigInt, Symbol, Function
+ * - cyclic object or array references
+ * - lone high/low Unicode surrogates in string values or object property names
  */
 function jcsSerialize(val: unknown, seen = new Set<object>()): string {
   if (val === undefined) {
@@ -88,6 +136,21 @@ function jcsSerialize(val: unknown, seen = new Set<object>()): string {
     return out;
   }
   if (Array.isArray(val)) {
+    if (Object.getOwnPropertySymbols(val).length > 0) {
+      throw new TypeError("Mảng chứa thuộc tính khóa Symbol không thuộc JSON data model.");
+    }
+    const ownNames = Object.getOwnPropertyNames(val);
+    const expectedIndexCount = val.length;
+    if (ownNames.length !== expectedIndexCount + 1) {
+      // Either sparse array (fewer index properties) or extra custom own properties on array
+      for (const name of ownNames) {
+        if (name === "length") continue;
+        const idx = Number(name);
+        if (!Number.isInteger(idx) || idx < 0 || idx >= expectedIndexCount || String(idx) !== name) {
+          throw new TypeError(`Mảng chứa thuộc tính ngoài chỉ mục "${name}" không thuộc JSON data model.`);
+        }
+      }
+    }
     if (seen.has(val)) {
       throw new TypeError("Phát hiện tham chiếu vòng (cyclic reference) trong mảng.");
     }
@@ -95,10 +158,21 @@ function jcsSerialize(val: unknown, seen = new Set<object>()): string {
     try {
       const items: string[] = [];
       for (let i = 0; i < val.length; i++) {
-        if (!(i in val) || val[i] === undefined) {
-          throw new TypeError(`Mảng thưa (sparse array) hoặc chứa undefined tại vị trí ${i} không được chấp nhận.`);
+        const key = String(i);
+        const desc = Object.getOwnPropertyDescriptor(val, key);
+        if (!desc) {
+          throw new TypeError(`Mảng thưa (sparse array) tại vị trí ${i} không được chấp nhận.`);
         }
-        items.push(jcsSerialize(val[i], seen));
+        if (desc.get !== undefined || desc.set !== undefined || !("value" in desc)) {
+          throw new TypeError(`Phần tử mảng tại vị trí ${i} là accessor (getter/setter) không thuộc JSON data model.`);
+        }
+        if (!desc.enumerable) {
+          throw new TypeError(`Phần tử mảng tại vị trí ${i} là non-enumerable không thuộc JSON data model.`);
+        }
+        if (desc.value === undefined) {
+          throw new TypeError(`Phần tử mảng tại vị trí ${i} có giá trị undefined không được chấp nhận.`);
+        }
+        items.push(jcsSerialize(desc.value, seen));
       }
       return "[" + items.join(",") + "]";
     } finally {
@@ -110,21 +184,34 @@ function jcsSerialize(val: unknown, seen = new Set<object>()): string {
       const typeName = val?.constructor?.name || typeof val;
       throw new TypeError(`Đối tượng kiểu ${typeName} không thuộc JSON data model.`);
     }
+    if (Object.getOwnPropertySymbols(val).length > 0) {
+      throw new TypeError("Đối tượng chứa thuộc tính khóa Symbol không thuộc JSON data model.");
+    }
     if (seen.has(val)) {
       throw new TypeError("Phát hiện tham chiếu vòng (cyclic reference) trong đối tượng.");
     }
     seen.add(val);
     try {
+      const ownKeys = Object.getOwnPropertyNames(val);
       const record = val as Record<string, unknown>;
-      const keys = Object.keys(record);
-      for (const k of keys) {
+      for (const k of ownKeys) {
         validateUnicodeString(k, `tên thuộc tính (property name "${k}")`);
-        if (record[k] === undefined) {
+        const desc = Object.getOwnPropertyDescriptor(record, k);
+        if (!desc) {
+          throw new TypeError(`Không thể đọc descriptor của thuộc tính "${k}".`);
+        }
+        if (desc.get !== undefined || desc.set !== undefined || !("value" in desc)) {
+          throw new TypeError(`Thuộc tính accessor (getter/setter) "${k}" không thuộc JSON data model.`);
+        }
+        if (!desc.enumerable) {
+          throw new TypeError(`Thuộc tính non-enumerable "${k}" không thuộc JSON data model.`);
+        }
+        if (desc.value === undefined) {
           throw new TypeError(`Thuộc tính "${k}" có giá trị undefined không được chấp nhận.`);
         }
       }
-      // UTF-16 code units lexicographical sorting
-      keys.sort((a, b) => {
+      // RFC 8785 Section 3.2.3: UTF-16 code units lexicographical sorting
+      ownKeys.sort((a, b) => {
         const len = Math.min(a.length, b.length);
         for (let i = 0; i < len; i++) {
           const diff = a.charCodeAt(i) - b.charCodeAt(i);
@@ -133,21 +220,19 @@ function jcsSerialize(val: unknown, seen = new Set<object>()): string {
         return a.length - b.length;
       });
       const items: string[] = [];
-      for (const k of keys) {
-        items.push(jcsSerialize(k, seen) + ":" + jcsSerialize(record[k], seen));
+      for (const k of ownKeys) {
+        const desc = Object.getOwnPropertyDescriptor(record, k)!;
+        items.push(jcsSerialize(k, seen) + ":" + jcsSerialize(desc.value, seen));
       }
       return "{" + items.join(",") + "}";
     } finally {
       seen.delete(val);
     }
   }
-  if (typeof val === "bigint" || typeof val === "symbol" || typeof val === "function") {
-    throw new TypeError(`Không thể canonicalize giá trị kiểu ${typeof val}.`);
-  }
   throw new TypeError(`Không thể canonicalize giá trị kiểu ${typeof val}.`);
 }
 
-/** Legacy normalizer preserving backward compatibility with CANONICAL_JSON_V1_SHA256 */
+/** Legacy V1 normalizer preserving exact historical behavior of CANONICAL_JSON_V1_SHA256. */
 function legacyNormalize(value: unknown): unknown {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number") {
@@ -166,14 +251,28 @@ function legacyNormalize(value: unknown): unknown {
   throw new TypeError(`Không thể canonicalize giá trị kiểu ${typeof value}.`);
 }
 
-/** Legacy V1 Canonical JSON string (JSON.stringify over sorted object) */
+/** Legacy V1 Canonical JSON string (JSON.stringify over sorted object). */
 export function legacyCanonicalJson(value: unknown): string {
   return JSON.stringify(legacyNormalize(value));
 }
 
-/** Legacy V1 SHA-256 hex digest */
+/** Legacy V1 SHA-256 hex digest (algorithm marker: CANONICAL_JSON_V1_SHA256). */
 export function legacyCanonicalSha256(value: unknown): string {
   return createHash("sha256").update(legacyCanonicalJson(value), "utf8").digest("hex");
+}
+
+/** Legacy pre-M3 JSON.stringify serialization (algorithm marker: LEGACY_JSON_STRINGIFY_SHA256). */
+export function legacyJsonStringify(value: unknown): string {
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) {
+    throw new TypeError("Giá trị không thể serialize bằng JSON.stringify.");
+  }
+  return serialized;
+}
+
+/** Legacy pre-M3 SHA-256 hex digest (algorithm marker: LEGACY_JSON_STRINGIFY_SHA256). */
+export function legacyJsonStringifySha256(value: unknown): string {
+  return createHash("sha256").update(legacyJsonStringify(value), "utf8").digest("hex");
 }
 
 /**
@@ -185,43 +284,139 @@ export function canonicalJson(value: unknown): string {
 }
 
 /**
- * SHA-256 hex digest of the RFC 8785 canonical JSON UTF-8 byte stream.
+ * SHA-256 hex digest of the RFC 8785 canonical JSON UTF-8 byte stream (algorithm marker: RFC8785_JCS).
  */
 export function canonicalSha256(value: unknown): string {
   return createHash("sha256").update(canonicalJson(value), "utf8").digest("hex");
 }
 
 /**
- * Dual-algorithm verifier.
- * If algorithm is specified, verifies strictly against that algorithm.
- * If algorithm is unspecified, tries RFC 8785 first, then falls back to legacy V1 and standard JSON.stringify.
+ * Atomically produces canonical JSON, SHA-256 checksum, and matching official algorithm marker
+ * to eliminate checksum/marker pairing mismatches.
  */
-export function verifyCanonicalSha256(value: unknown, expected: string, algorithm?: string): boolean {
-  const normalizedExpected = expected.trim().toLowerCase();
-  if (algorithm === "RFC8785_JCS" || algorithm === "RFC8785") {
-    return canonicalSha256(value) === normalizedExpected;
+export function createCanonicalChecksum(
+  value: unknown,
+  algorithm: SupportedChecksumAlgorithm = CANONICAL_CHECKSUM_ALGORITHM,
+): ChecksumEnvelope {
+  if (!isSupportedChecksumAlgorithm(algorithm)) {
+    throw new TypeError(`Mã thuật toán checksum không được hỗ trợ: "${String(algorithm)}".`);
   }
-  if (algorithm === "CANONICAL_JSON_V1_SHA256") {
-    return legacyCanonicalSha256(value) === normalizedExpected;
+  if (algorithm === CANONICAL_CHECKSUM_ALGORITHM) {
+    const serialized = canonicalJson(value);
+    return {
+      canonicalJson: serialized,
+      checksumSha256: createHash("sha256").update(serialized, "utf8").digest("hex"),
+      algorithmCode: CANONICAL_CHECKSUM_ALGORITHM,
+    };
   }
-  if (algorithm === "LEGACY_JSON_STRINGIFY_SHA256") {
-    return createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex") === normalizedExpected;
+  if (algorithm === LEGACY_CANONICAL_CHECKSUM_ALGORITHM) {
+    const serialized = legacyCanonicalJson(value);
+    return {
+      canonicalJson: serialized,
+      checksumSha256: createHash("sha256").update(serialized, "utf8").digest("hex"),
+      algorithmCode: LEGACY_CANONICAL_CHECKSUM_ALGORITHM,
+    };
   }
-  // Dual-mode fallback for unversioned / legacy callers
-  if (canonicalSha256(value) === normalizedExpected) {
-    return true;
-  }
-  if (legacyCanonicalSha256(value) === normalizedExpected) {
-    return true;
-  }
-  return createHash("sha256").update(JSON.stringify(value), "utf8").digest("hex") === normalizedExpected;
+  const serialized = legacyJsonStringify(value);
+  return {
+    canonicalJson: serialized,
+    checksumSha256: createHash("sha256").update(serialized, "utf8").digest("hex"),
+    algorithmCode: LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM,
+  };
 }
 
-/** Primary algorithm identifier conforming to RFC 8785 */
-export const CANONICAL_CHECKSUM_ALGORITHM = "RFC8785_JCS" as const;
+/**
+ * Strict single-algorithm checksum verifier.
+ *
+ * Policy:
+ * - Official algorithm marker MUST be one of:
+ *   "RFC8785_JCS", "CANONICAL_JSON_V1_SHA256", "LEGACY_JSON_STRINGIFY_SHA256".
+ * - Unsupported markers (including undocumented aliases such as "RFC8785") throw TypeError.
+ * - Omitting `algorithm` verifies strictly against "RFC8785_JCS" (NO silent legacy fallback).
+ * - For historical records stored without an algorithm marker column, callers MUST explicitly use
+ *   `verifyHistoricalChecksumWithoutMarker` with documented reason and scope.
+ */
+export function verifyCanonicalSha256(
+  value: unknown,
+  expected: string,
+  algorithm: string = CANONICAL_CHECKSUM_ALGORITHM,
+): boolean {
+  if (!isSupportedChecksumAlgorithm(algorithm)) {
+    throw new TypeError(`Mã thuật toán checksum không được hỗ trợ: "${algorithm}".`);
+  }
+  const normalizedExpected = expected.trim().toLowerCase();
+  if (algorithm === CANONICAL_CHECKSUM_ALGORITHM) {
+    return canonicalSha256(value) === normalizedExpected;
+  }
+  if (algorithm === LEGACY_CANONICAL_CHECKSUM_ALGORITHM) {
+    return legacyCanonicalSha256(value) === normalizedExpected;
+  }
+  return legacyJsonStringifySha256(value) === normalizedExpected;
+}
 
-/** Alias for RFC 8785 JCS checksum algorithm */
-export const RFC8785_CHECKSUM_ALGORITHM = "RFC8785_JCS" as const;
+/**
+ * Controlled, traceable verification fallback strictly scoped to historical data that was
+ * persisted in schema tables lacking a checksum algorithm marker column.
+ *
+ * New data flows MUST NEVER call this function; they MUST use `verifyCanonicalSha256` with an
+ * explicit official algorithm marker.
+ */
+export function verifyHistoricalChecksumWithoutMarker(
+  value: unknown,
+  expected: string,
+  context: HistoricalFallbackContext,
+): HistoricalFallbackVerificationResult {
+  const reason = context?.reason?.trim() ?? "";
+  const scope = context?.scope?.trim() ?? "";
+  if (!reason || !scope) {
+    throw new TypeError("Fallback lịch sử không có marker bắt buộc phải cung cấp đầy đủ reason và scope truy nguyên.");
+  }
 
-/** Legacy algorithm code for historical checkpoints and migrations */
-export const LEGACY_CANONICAL_CHECKSUM_ALGORITHM = "CANONICAL_JSON_V1_SHA256" as const;
+  const normalizedExpected = expected.trim().toLowerCase();
+  const attemptedAlgorithms: SupportedChecksumAlgorithm[] = [];
+
+  attemptedAlgorithms.push(CANONICAL_CHECKSUM_ALGORITHM);
+  if (canonicalSha256(value) === normalizedExpected) {
+    return {
+      verified: true,
+      matchedAlgorithm: CANONICAL_CHECKSUM_ALGORITHM,
+      usedFallback: false,
+      reason,
+      scope,
+      attemptedAlgorithms,
+    };
+  }
+
+  attemptedAlgorithms.push(LEGACY_CANONICAL_CHECKSUM_ALGORITHM);
+  if (legacyCanonicalSha256(value) === normalizedExpected) {
+    return {
+      verified: true,
+      matchedAlgorithm: LEGACY_CANONICAL_CHECKSUM_ALGORITHM,
+      usedFallback: true,
+      reason,
+      scope,
+      attemptedAlgorithms,
+    };
+  }
+
+  attemptedAlgorithms.push(LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM);
+  if (legacyJsonStringifySha256(value) === normalizedExpected) {
+    return {
+      verified: true,
+      matchedAlgorithm: LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM,
+      usedFallback: true,
+      reason,
+      scope,
+      attemptedAlgorithms,
+    };
+  }
+
+  return {
+    verified: false,
+    matchedAlgorithm: null,
+    usedFallback: true,
+    reason,
+    scope,
+    attemptedAlgorithms,
+  };
+}
