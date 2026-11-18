@@ -9,6 +9,9 @@ import {
   canonicalJson,
   canonicalSha256,
   createCanonicalChecksum,
+  HISTORICAL_CHECKSUM_FALLBACK_SCOPES,
+  type HistoricalFallbackContext,
+  isAllowedHistoricalFallbackScope,
   isSupportedChecksumAlgorithm,
   LEGACY_CANONICAL_CHECKSUM_ALGORITHM,
   LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM,
@@ -105,6 +108,8 @@ const RFC8785_OFFICIAL_VECTORS: ConformanceVector[] = [
       '{"\\r":"Carriage Return","1":"One","\u0080":"Control","\u00f6":"Latin Small Letter O With Diaeresis","\u20ac":"Euro Sign","\ud83d\ude00":"Emoji: Grinning Face","\ufb33":"Hebrew Letter Dalet With Dagesh"}',
     bytes: 180,
     sha256: "5e321556d22018a9656991a9e94f77ec175fa193e52a2429d312f8419ec8b08c",
+    expectedUtf8Hex:
+      "7b225c72223a2243617272696167652052657475726e222c2231223a224f6e65222c22c280223a22436f6e74726f6c222c22c3b6223a224c6174696e20536d616c6c204c6574746572204f205769746820446961657265736973222c22e282ac223a224575726f205369676e222c22f09f9880223a22456d6f6a693a204772696e6e696e672046616365222c22efacb3223a22486562726577204c65747465722044616c6574205769746820446167657368227d",
   },
 ];
 
@@ -124,6 +129,63 @@ for (const vec of RFC8785_OFFICIAL_VECTORS) {
     assert.equal(verifyCanonicalSha256(vec.input, vec.sha256, CANONICAL_CHECKSUM_ALGORITHM), true);
   });
 }
+
+test("[CLOSURE-01] RFC-323-SORT: xác minh chính xác code point U+0080 (UTF-8 c280) không bị biến đổi thành U+20AC (UTF-8 e282ac)", () => {
+  const sortVector = RFC8785_OFFICIAL_VECTORS.find((v) => v.id === "RFC-323-SORT")!;
+  const inputRecord = sortVector.input as Record<string, string>;
+
+  // 1. Verify exact input code points (never rely on display glyphs)
+  const controlKey = Object.keys(inputRecord).find((k) => inputRecord[k] === "Control");
+  const euroKey = Object.keys(inputRecord).find((k) => inputRecord[k] === "Euro Sign");
+  assert.ok(controlKey !== undefined);
+  assert.ok(euroKey !== undefined);
+  assert.equal(controlKey.codePointAt(0), 0x0080);
+  assert.equal(euroKey.codePointAt(0), 0x20ac);
+  assert.notEqual(controlKey, euroKey);
+
+  // 2. Verify canonical output code points and exact UTF-8 byte sequences
+  const serialized = canonicalJson(inputRecord);
+  const parsedKeys = Object.keys(JSON.parse(serialized) as Record<string, string>);
+  // Note: JSON.parse preserves non-index insertion order; verify via regex/index order in raw canonical string
+  const orderedCodePoints = [0x000d, 0x0031, 0x0080, 0x00f6, 0x20ac, 0x1f600, 0xfb33];
+  const expectedValues = [
+    "Carriage Return",
+    "One",
+    "Control",
+    "Latin Small Letter O With Diaeresis",
+    "Euro Sign",
+    "Emoji: Grinning Face",
+    "Hebrew Letter Dalet With Dagesh",
+  ];
+  assert.equal(parsedKeys.length, 7);
+
+  let lastPos = -1;
+  for (let i = 0; i < expectedValues.length; i++) {
+    const pos = serialized.indexOf(`"${expectedValues[i]}"`);
+    assert.ok(pos > lastPos, `Expected value "${expectedValues[i]}" to appear in strict RFC 8785 UTF-16 order.`);
+    lastPos = pos;
+  }
+
+  // Verify raw UTF-8 bytes of the two keys directly in serialized output buffer
+  const idxControlKey = serialized.indexOf('":"Control"') - 1;
+  const idxEuroKey = serialized.indexOf('":"Euro Sign"') - 1;
+  assert.equal(serialized.codePointAt(idxControlKey), 0x0080);
+  assert.equal(serialized.codePointAt(idxEuroKey), 0x20ac);
+  assert.equal(Buffer.from(serialized[idxControlKey], "utf8").toString("hex"), "c280");
+  assert.equal(Buffer.from(serialized[idxEuroKey], "utf8").toString("hex"), "e282ac");
+
+  // Verify exact UTF-16 code unit ordering of all 7 keys
+  const serializedKeyCodePoints = [
+    "\r",
+    "1",
+    serialized[idxControlKey],
+    "\u00f6",
+    serialized[idxEuroKey],
+    "\ud83d\ude00",
+    "\ufb33",
+  ].map((k) => k.codePointAt(0));
+  assert.deepEqual(serializedKeyCodePoints, orderedCodePoints);
+});
 
 // ============================================================================
 // 3. OFFICIAL IETF RFC 8785 APPENDIX B — ALL 26 IEEE 754 NUMBER SAMPLES
@@ -446,54 +508,133 @@ test("[R2] verifyCanonicalSha256 không có marker KHÔNG fallback về legacy (
   assert.equal(verifyCanonicalSha256(sample, legacyHash), false);
 });
 
-test("[R2] verifyHistoricalChecksumWithoutMarker bắt buộc có reason/scope và truy nguyên đầy đủ kết quả fallback", () => {
+test("[R2/CLOSURE-02] closed allow-list cho historical fallback: ràng buộc bảng/cột/thuật toán lịch sử và từ chối scope không hợp lệ", () => {
+  const scopeIds = Object.keys(HISTORICAL_CHECKSUM_FALLBACK_SCOPES);
+  assert.deepEqual(scopeIds, [
+    "legal_builder.release_package.manifest_checksum_sha256",
+    "legal_builder.amendment_source_version.checksum_sha256",
+    "legal_builder.draft_merge_operation.input_checksum_sha256",
+    "legal_builder.draft_merge_operation.preview_checksum_sha256",
+    "legal_builder.draft_merge_conflict.evidence_checksum_sha256",
+  ]);
+
+  // Verify every declared scope binds table, column, and historical algorithms ONLY (never RFC8785_JCS)
+  for (const spec of Object.values(HISTORICAL_CHECKSUM_FALLBACK_SCOPES)) {
+    assert.ok(spec.table.startsWith("legal_builder."));
+    assert.ok(spec.checksumColumn.length > 0);
+    assert.ok(spec.allowedHistoricalAlgorithms.length > 0);
+    assert.equal(
+      (spec.allowedHistoricalAlgorithms as readonly string[]).includes(CANONICAL_CHECKSUM_ALGORITHM),
+      false,
+      `Scope ${spec.scopeId} không được phép chứa RFC8785_JCS trong tập thuật toán lịch sử.`,
+    );
+  }
+
+  // Tables that already have NOT NULL algorithm marker columns MUST NOT be in fallback allow-list
+  assert.equal(isAllowedHistoricalFallbackScope("legal_builder.draft_version.snapshot_checksum_sha256"), false);
+  assert.equal(isAllowedHistoricalFallbackScope("legal_builder.draft_checkpoint.snapshot_checksum_sha256"), false);
+  assert.equal(isAllowedHistoricalFallbackScope("legacy_unmarked_snapshot"), false);
+  assert.equal(isAllowedHistoricalFallbackScope(""), false);
+
   const sample = { "10": 1, "2": 2, z: 3, a: 4 };
   const v1Hash = legacyCanonicalSha256(sample);
-  const legacyHash = legacyJsonStringifySha256(sample);
   const jcsHash = canonicalSha256(sample);
+  const legacyStringifyHash = legacyJsonStringifySha256(sample);
 
-  // Reject missing/blank audit context
-  assert.throws(() => verifyHistoricalChecksumWithoutMarker(sample, v1Hash, { reason: "", scope: "release_package" }), TypeError);
-  assert.throws(() => verifyHistoricalChecksumWithoutMarker(sample, v1Hash, { reason: "audit", scope: "   " }), TypeError);
+  // 1. Reject empty/whitespace reason or scope
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
+        reason: "",
+        scope: "legal_builder.release_package.manifest_checksum_sha256",
+        recordClassification: "HISTORICAL_PRE_JCS",
+      }),
+    TypeError,
+  );
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
+        reason: "   ",
+        scope: "legal_builder.release_package.manifest_checksum_sha256",
+        recordClassification: "HISTORICAL_PRE_JCS",
+      }),
+    TypeError,
+  );
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
+        reason: "audit",
+        scope: "   ",
+        recordClassification: "HISTORICAL_PRE_JCS",
+      } as unknown as HistoricalFallbackContext),
+    TypeError,
+  );
 
-  const resJcs = verifyHistoricalChecksumWithoutMarker(sample, jcsHash, {
-    reason: "Kiểm toán release_package lịch sử không có cột algorithm_code",
+  // 2. Reject undeclared or marked-table scopes
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
+        reason: "attempt undeclared scope",
+        scope: "unknown_scope",
+        recordClassification: "HISTORICAL_PRE_JCS",
+      } as unknown as HistoricalFallbackContext),
+    TypeError,
+  );
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
+        reason: "attempt fallback on marked draft_version table",
+        scope: "legal_builder.draft_version.snapshot_checksum_sha256",
+        recordClassification: "HISTORICAL_PRE_JCS",
+      } as unknown as HistoricalFallbackContext),
+    TypeError,
+  );
+
+  // 3. Reject new data classification from entering historical fallback
+  assert.throws(
+    () =>
+      verifyHistoricalChecksumWithoutMarker(sample, jcsHash, {
+        reason: "new record must not use fallback",
+        scope: "legal_builder.release_package.manifest_checksum_sha256",
+        recordClassification: "NEW_JCS",
+      } as unknown as HistoricalFallbackContext),
+    TypeError,
+  );
+
+  // 4. Prove new RFC8785_JCS hash is NOT accepted by historical fallback (only V1 is allowed for this scope)
+  const resNewJcsHash = verifyHistoricalChecksumWithoutMarker(sample, jcsHash, {
+    reason: "Kiểm toán gói release lịch sử trước cutover JCS",
     scope: "legal_builder.release_package.manifest_checksum_sha256",
+    recordClassification: "HISTORICAL_PRE_JCS",
   });
-  assert.equal(resJcs.verified, true);
-  assert.equal(resJcs.matchedAlgorithm, "RFC8785_JCS");
-  assert.equal(resJcs.usedFallback, false);
-  assert.deepEqual(resJcs.attemptedAlgorithms, ["RFC8785_JCS"]);
+  assert.equal(resNewJcsHash.verified, false);
+  assert.equal(resNewJcsHash.matchedAlgorithm, null);
+  assert.equal(resNewJcsHash.usedFallback, true);
+  assert.equal(resNewJcsHash.table, "legal_builder.release_package");
+  assert.equal(resNewJcsHash.checksumColumn, "manifest_checksum_sha256");
+  assert.deepEqual(resNewJcsHash.attemptedAlgorithms, ["CANONICAL_JSON_V1_SHA256"]);
 
+  // 5. Prove historical V1 hash IS verified with full traceability
   const resV1 = verifyHistoricalChecksumWithoutMarker(sample, v1Hash, {
-    reason: "Kiểm toán release_package lịch sử không có cột algorithm_code",
+    reason: "Kiểm toán gói release lịch sử trước cutover JCS",
     scope: "legal_builder.release_package.manifest_checksum_sha256",
+    recordClassification: "HISTORICAL_PRE_JCS",
   });
   assert.equal(resV1.verified, true);
   assert.equal(resV1.matchedAlgorithm, "CANONICAL_JSON_V1_SHA256");
   assert.equal(resV1.usedFallback, true);
-  assert.deepEqual(resV1.attemptedAlgorithms, ["RFC8785_JCS", "CANONICAL_JSON_V1_SHA256"]);
+  assert.equal(resV1.table, "legal_builder.release_package");
+  assert.equal(resV1.checksumColumn, "manifest_checksum_sha256");
+  assert.deepEqual(resV1.attemptedAlgorithms, ["CANONICAL_JSON_V1_SHA256"]);
 
-  const resLegacy = verifyHistoricalChecksumWithoutMarker(sample, legacyHash, {
-    reason: "Kiểm toán dữ liệu lịch sử trước M3 không có cột algorithm_code",
-    scope: "legacy_unmarked_snapshot",
+  // 6. Prove unpermitted algorithm for that scope (LEGACY_JSON_STRINGIFY_SHA256) is NOT matched
+  const resUnpermittedAlg = verifyHistoricalChecksumWithoutMarker(sample, legacyStringifyHash, {
+    reason: "Kiểm toán gói release lịch sử trước cutover JCS",
+    scope: "legal_builder.release_package.manifest_checksum_sha256",
+    recordClassification: "HISTORICAL_PRE_JCS",
   });
-  assert.equal(resLegacy.verified, true);
-  assert.equal(resLegacy.matchedAlgorithm, "LEGACY_JSON_STRINGIFY_SHA256");
-  assert.equal(resLegacy.usedFallback, true);
-  assert.deepEqual(resLegacy.attemptedAlgorithms, [
-    "RFC8785_JCS",
-    "CANONICAL_JSON_V1_SHA256",
-    "LEGACY_JSON_STRINGIFY_SHA256",
-  ]);
-
-  const resFail = verifyHistoricalChecksumWithoutMarker(sample, "0".repeat(64), {
-    reason: "Kiểm toán dữ liệu hỏng",
-    scope: "legacy_unmarked_snapshot",
-  });
-  assert.equal(resFail.verified, false);
-  assert.equal(resFail.matchedAlgorithm, null);
-  assert.equal(resFail.usedFallback, true);
+  assert.equal(resUnpermittedAlg.verified, false);
+  assert.equal(resUnpermittedAlg.matchedAlgorithm, null);
 });
 
 test("[R1] regression guard: không repository hoặc script nào tạo checksum JCS nhưng ghi cứng marker CANONICAL_JSON_V1_SHA256", () => {

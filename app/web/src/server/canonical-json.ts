@@ -18,6 +18,68 @@ export const SUPPORTED_CHECKSUM_ALGORITHMS = [
 
 export type SupportedChecksumAlgorithm = (typeof SUPPORTED_CHECKSUM_ALGORITHMS)[number];
 
+/** Historical algorithms permitted only in controlled unmarked-legacy fallback scopes (never RFC8785_JCS). */
+export type HistoricalChecksumAlgorithm =
+  | typeof LEGACY_CANONICAL_CHECKSUM_ALGORITHM
+  | typeof LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM;
+
+export interface HistoricalFallbackScopeSpec {
+  readonly scopeId: HistoricalFallbackScopeId;
+  readonly table: string;
+  readonly checksumColumn: string;
+  readonly allowedHistoricalAlgorithms: readonly HistoricalChecksumAlgorithm[];
+  readonly rationale: string;
+}
+
+/**
+ * Closed allow-list of schema scopes that lack a checksum algorithm marker column in migrations 0001..0031.
+ * Tables WITH a marker column (draft_checkpoint, draft_version per migration 0014) are explicitly EXCLUDED
+ * and MUST always use strict `verifyCanonicalSha256` with their persisted algorithm marker.
+ */
+export const HISTORICAL_CHECKSUM_FALLBACK_SCOPES = {
+  "legal_builder.release_package.manifest_checksum_sha256": {
+    scopeId: "legal_builder.release_package.manifest_checksum_sha256",
+    table: "legal_builder.release_package",
+    checksumColumn: "manifest_checksum_sha256",
+    allowedHistoricalAlgorithms: [LEGACY_CANONICAL_CHECKSUM_ALGORITHM],
+    rationale: "Migration 0020/0023 chưa có cột algorithm marker; gói release lịch sử trước cutover JCS dùng CANONICAL_JSON_V1_SHA256.",
+  },
+  "legal_builder.amendment_source_version.checksum_sha256": {
+    scopeId: "legal_builder.amendment_source_version.checksum_sha256",
+    table: "legal_builder.amendment_source_version",
+    checksumColumn: "checksum_sha256",
+    allowedHistoricalAlgorithms: [LEGACY_CANONICAL_CHECKSUM_ALGORITHM],
+    rationale: "Migration 0009 chưa có cột algorithm marker; phiên bản nguồn sửa đổi lịch sử trước cutover JCS dùng CANONICAL_JSON_V1_SHA256.",
+  },
+  "legal_builder.draft_merge_operation.input_checksum_sha256": {
+    scopeId: "legal_builder.draft_merge_operation.input_checksum_sha256",
+    table: "legal_builder.draft_merge_operation",
+    checksumColumn: "input_checksum_sha256",
+    allowedHistoricalAlgorithms: [LEGACY_CANONICAL_CHECKSUM_ALGORITHM],
+    rationale: "Migration 0016 chưa có cột checksum algorithm marker; input checksum lịch sử trước cutover JCS dùng CANONICAL_JSON_V1_SHA256.",
+  },
+  "legal_builder.draft_merge_operation.preview_checksum_sha256": {
+    scopeId: "legal_builder.draft_merge_operation.preview_checksum_sha256",
+    table: "legal_builder.draft_merge_operation",
+    checksumColumn: "preview_checksum_sha256",
+    allowedHistoricalAlgorithms: [LEGACY_CANONICAL_CHECKSUM_ALGORITHM],
+    rationale: "Migration 0016 chưa có cột checksum algorithm marker; preview token lịch sử trước cutover JCS dùng CANONICAL_JSON_V1_SHA256.",
+  },
+  "legal_builder.draft_merge_conflict.evidence_checksum_sha256": {
+    scopeId: "legal_builder.draft_merge_conflict.evidence_checksum_sha256",
+    table: "legal_builder.draft_merge_conflict",
+    checksumColumn: "evidence_checksum_sha256",
+    allowedHistoricalAlgorithms: [LEGACY_CANONICAL_CHECKSUM_ALGORITHM],
+    rationale: "Migration 0016 chưa có cột checksum algorithm marker; evidence checksum lịch sử trước cutover JCS dùng CANONICAL_JSON_V1_SHA256.",
+  },
+} as const;
+
+export type HistoricalFallbackScopeId = keyof typeof HISTORICAL_CHECKSUM_FALLBACK_SCOPES;
+
+export function isAllowedHistoricalFallbackScope(scope: string): scope is HistoricalFallbackScopeId {
+  return Object.prototype.hasOwnProperty.call(HISTORICAL_CHECKSUM_FALLBACK_SCOPES, scope);
+}
+
 export interface ChecksumEnvelope {
   readonly canonicalJson: string;
   readonly checksumSha256: string;
@@ -26,16 +88,19 @@ export interface ChecksumEnvelope {
 
 export interface HistoricalFallbackContext {
   readonly reason: string;
-  readonly scope: string;
+  readonly scope: HistoricalFallbackScopeId;
+  readonly recordClassification: "HISTORICAL_PRE_JCS";
 }
 
 export interface HistoricalFallbackVerificationResult {
   readonly verified: boolean;
-  readonly matchedAlgorithm: SupportedChecksumAlgorithm | null;
-  readonly usedFallback: boolean;
+  readonly matchedAlgorithm: HistoricalChecksumAlgorithm | null;
+  readonly usedFallback: true;
   readonly reason: string;
-  readonly scope: string;
-  readonly attemptedAlgorithms: readonly SupportedChecksumAlgorithm[];
+  readonly scope: HistoricalFallbackScopeId;
+  readonly table: string;
+  readonly checksumColumn: string;
+  readonly attemptedAlgorithms: readonly HistoricalChecksumAlgorithm[];
 }
 
 export function isSupportedChecksumAlgorithm(algorithm: string): algorithm is SupportedChecksumAlgorithm {
@@ -355,60 +420,53 @@ export function verifyCanonicalSha256(
 }
 
 /**
- * Controlled, traceable verification fallback strictly scoped to historical data that was
- * persisted in schema tables lacking a checksum algorithm marker column.
+ * Controlled, traceable verification fallback strictly scoped to declared historical tables
+ * that lack a checksum algorithm marker column in migrations 0001..0031.
  *
- * New data flows MUST NEVER call this function; they MUST use `verifyCanonicalSha256` with an
- * explicit official algorithm marker.
+ * Security & policy invariants:
+ * - `context.scope` MUST exist in closed allow-list `HISTORICAL_CHECKSUM_FALLBACK_SCOPES`.
+ * - `context.reason` MUST be non-empty.
+ * - `context.recordClassification` MUST be `"HISTORICAL_PRE_JCS"` (new data is rejected).
+ * - Evaluates ONLY the historical algorithms bound to that scope (NEVER `RFC8785_JCS`).
+ * - New data flows MUST NEVER call this function; they MUST use `verifyCanonicalSha256`.
  */
 export function verifyHistoricalChecksumWithoutMarker(
   value: unknown,
   expected: string,
   context: HistoricalFallbackContext,
 ): HistoricalFallbackVerificationResult {
-  const reason = context?.reason?.trim() ?? "";
-  const scope = context?.scope?.trim() ?? "";
-  if (!reason || !scope) {
+  const reason = typeof context?.reason === "string" ? context.reason.trim() : "";
+  const rawScope = typeof context?.scope === "string" ? context.scope.trim() : "";
+  if (!reason || !rawScope) {
     throw new TypeError("Fallback lịch sử không có marker bắt buộc phải cung cấp đầy đủ reason và scope truy nguyên.");
   }
+  if (!isAllowedHistoricalFallbackScope(rawScope)) {
+    throw new TypeError(`Scope fallback lịch sử không hợp lệ hoặc không nằm trong closed allow-list: "${rawScope}".`);
+  }
+  if (context?.recordClassification !== "HISTORICAL_PRE_JCS") {
+    throw new TypeError(
+      `Dữ liệu mới không được phép đi vào nhánh fallback lịch sử (bắt buộc recordClassification="HISTORICAL_PRE_JCS").`,
+    );
+  }
 
+  const spec = HISTORICAL_CHECKSUM_FALLBACK_SCOPES[rawScope];
   const normalizedExpected = expected.trim().toLowerCase();
-  const attemptedAlgorithms: SupportedChecksumAlgorithm[] = [];
+  const attemptedAlgorithms: HistoricalChecksumAlgorithm[] = [];
 
-  attemptedAlgorithms.push(CANONICAL_CHECKSUM_ALGORITHM);
-  if (canonicalSha256(value) === normalizedExpected) {
-    return {
-      verified: true,
-      matchedAlgorithm: CANONICAL_CHECKSUM_ALGORITHM,
-      usedFallback: false,
-      reason,
-      scope,
-      attemptedAlgorithms,
-    };
-  }
-
-  attemptedAlgorithms.push(LEGACY_CANONICAL_CHECKSUM_ALGORITHM);
-  if (legacyCanonicalSha256(value) === normalizedExpected) {
-    return {
-      verified: true,
-      matchedAlgorithm: LEGACY_CANONICAL_CHECKSUM_ALGORITHM,
-      usedFallback: true,
-      reason,
-      scope,
-      attemptedAlgorithms,
-    };
-  }
-
-  attemptedAlgorithms.push(LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM);
-  if (legacyJsonStringifySha256(value) === normalizedExpected) {
-    return {
-      verified: true,
-      matchedAlgorithm: LEGACY_JSON_STRINGIFY_CHECKSUM_ALGORITHM,
-      usedFallback: true,
-      reason,
-      scope,
-      attemptedAlgorithms,
-    };
+  for (const algorithm of spec.allowedHistoricalAlgorithms) {
+    attemptedAlgorithms.push(algorithm);
+    if (verifyCanonicalSha256(value, normalizedExpected, algorithm)) {
+      return {
+        verified: true,
+        matchedAlgorithm: algorithm,
+        usedFallback: true,
+        reason,
+        scope: spec.scopeId,
+        table: spec.table,
+        checksumColumn: spec.checksumColumn,
+        attemptedAlgorithms,
+      };
+    }
   }
 
   return {
@@ -416,7 +474,9 @@ export function verifyHistoricalChecksumWithoutMarker(
     matchedAlgorithm: null,
     usedFallback: true,
     reason,
-    scope,
+    scope: spec.scopeId,
+    table: spec.table,
+    checksumColumn: spec.checksumColumn,
     attemptedAlgorithms,
   };
 }
