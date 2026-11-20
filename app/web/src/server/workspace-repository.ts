@@ -134,7 +134,7 @@ export class PostgresWorkspaceRepository {
            JOIN legal_builder.legal_document d ON d.id = w.legal_document_id
            JOIN legal_builder.legal_document_project p ON p.id = w.project_id
           WHERE w.id = $1
-          FOR UPDATE`,
+          FOR UPDATE OF w`,
         [command.workspaceId],
       );
       if (current.rowCount === 0) throw new AppError("NOT_FOUND", "Không tìm thấy workspace.");
