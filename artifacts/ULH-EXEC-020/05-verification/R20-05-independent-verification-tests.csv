@@ -1,0 +1,11 @@
+TestCaseId,TestCaseName,Status,SQLState,Detail
+"TC-01","Valid independent verification reproducing same hash","PASS","00000","Allowed as expected"
+"TC-02","Legitimate payload drift detected (distinct non-null hashes)","PASS","00000","Allowed as expected"
+"TC-03","Payload drift rejected when verified_payload_sha256 equals input_payload_sha256","PASS","23514","Denied as expected: PAYLOAD_DRIFT_DETECTED requires both valid input_payload_sha256 and verified_payload_sha256 to be present and distinct"
+"TC-04","Payload drift rejected when verified_payload_sha256 is NULL","PASS","23514","Denied as expected: PAYLOAD_DRIFT_DETECTED requires both valid input_payload_sha256 and verified_payload_sha256 to be present and distinct"
+"TC-05","Disallowed algorithm code in tested_algorithms","PASS","23514","Denied as expected: INDEPENDENTLY_REPRODUCED requires matched_algorithms and recomputed_hashes to agree with evidence"
+"TC-06","Mismatched recomputed_hashes when claiming INDEPENDENTLY_REPRODUCED","PASS","23514","Denied as expected: verifier matched_algorithms ({LEGACY_JSON_STRINGIFY_SHA256}) does not match hashes equal to persisted_checksum_sha256 ({})"
+"TC-07","Non-independent engine: verifier_engine_id identical to scanner","PASS","23514","Denied as expected: independent verifier_engine_id (scanner-node-v1) must differ from scanner calculator_engine_id (scanner-node-v1)"
+"TC-08","Non-independent runtime family: verifier_runtime_family identical to scanner","PASS","23514","Denied as expected: independent verifier_runtime_family (NODE_JS) must differ from scanner calculator_runtime_family (NODE_JS)"
+"TC-09","Missing transaction authentication context","PASS","42501","Denied as expected: independent verification requires set_tx_actor_context() with LOCAL_HMAC_SESSION"
+"TC-10","Immutability: Attempting UPDATE on recorded independent verification row","PASS","55000","Denied as expected: immutable table legal_builder.checksum_independent_verification does not allow UPDATE"

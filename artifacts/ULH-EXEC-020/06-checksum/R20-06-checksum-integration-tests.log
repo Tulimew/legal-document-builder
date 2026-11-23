@@ -1,0 +1,16 @@
+=== R20-06 CHECKSUM CALLSITE INTEGRATION TESTS LOG ===
+Timestamp: 2026-11-23T09:04:34.783Z
+Target DB: legal_builder_test_sec_boundary_020 on Port 55432
+
+[TEST 1A: amendment_source_version] INSERT with RFC8785_JCS -> PASS (Allowed)
+[TEST 1B: amendment_source_version] Reject legacy algorithm -> PASS (Denied as expected: New row in legal_builder.amendment_source_version must use checksum algorithm RFC8785_JCS in column checksum_algorithm_code (received: LEGACY_JSON_STRINGIFY_SHA256))
+[TEST 2A: publishing_job] INSERT with RFC8785_JCS -> PASS (Allowed)
+[TEST 2B: publishing_job] Reject legacy fingerprint -> PASS (Denied as expected: New row in legal_builder.publishing_job must use checksum algorithm RFC8785_JCS in column input_fingerprint_algorithm_code (received: LEGACY_JSON_STRINGIFY_SHA256))
+[TEST 3A: draft_merge_operation] INSERT with RFC8785_JCS -> PASS (Allowed)
+[TEST 4A: draft_merge_conflict] INSERT with RFC8785_JCS -> PASS (Allowed)
+[TEST 4B: draft_merge_conflict] Reject legacy checksum -> PASS (Denied as expected: New row in legal_builder.draft_merge_conflict must use checksum algorithm RFC8785_JCS in column evidence_checksum_algorithm_code (received: CANONICAL_JSON_V1_SHA256))
+[TEST 5A: release_package] SEAL with RFC8785_JCS -> PASS (Allowed)
+[TEST 5B: release_package] Reject legacy seal marker -> PASS (Denied as expected: Sealing release_package a82c9454-ddc7-4958-9ff4-c142f715d68d must use manifest_checksum_algorithm_code = RFC8785_JCS (received: CANONICAL_JSON_V1_SHA256))
+[TEST 6A: draft_checkpoint] INSERT with RFC8785_JCS -> PASS (Allowed)
+[TEST 6B: draft_checkpoint] Reject legacy algorithm -> PASS (Denied as expected: New row in legal_builder.draft_checkpoint must use checksum algorithm RFC8785_JCS in column snapshot_checksum_algorithm_code (received: LEGACY_JSON_STRINGIFY_SHA256))
+[TEST 7: draft_version JCS trigger guard] -> PASS (Denied as expected: New row in legal_builder.draft_version must use checksum algorithm RFC8785_JCS in column snapshot_checksum_algorithm_code (received: LEGACY_JSON_STRINGIFY_SHA256))

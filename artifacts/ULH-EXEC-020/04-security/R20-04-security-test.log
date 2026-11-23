@@ -1,0 +1,53 @@
+=== R20-04 C1 SECURITY BOUNDARY TEST LOG ===
+Timestamp: 2026-11-23T08:54:29.927Z
+Target DB: legal_builder_test_sec_boundary on Port 55433
+Target Table: legal_builder.draft_version (C1 Immutable Table)
+
+[ROLE: ulh_app_runtime] [OP: SELECT] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_app_runtime] [OP: INSERT] -> DENIED (Code: 23503) Detail: insert or update on table "draft_version" violates foreign key constraint "draft_version_project_id_fkey"
+[ROLE: ulh_app_runtime] [OP: UPDATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_app_runtime] [OP: DELETE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_app_runtime] [OP: TRUNCATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_app_runtime] [OP: ALTER TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_app_runtime] [OP: DISABLE TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_app_runtime] [OP: DROP TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of relation draft_version
+[ROLE: ulh_app_runtime] [OP: DROP TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_reconciler] [OP: SELECT] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_reconciler] [OP: INSERT] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_reconciler] [OP: UPDATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_reconciler] [OP: DELETE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_reconciler] [OP: TRUNCATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_reconciler] [OP: ALTER TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_reconciler] [OP: DISABLE TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_reconciler] [OP: DROP TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of relation draft_version
+[ROLE: ulh_reconciler] [OP: DROP TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_governance_approver] [OP: SELECT] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_governance_approver] [OP: INSERT] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_governance_approver] [OP: UPDATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_governance_approver] [OP: DELETE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_governance_approver] [OP: TRUNCATE] -> DENIED (Code: 42501) Detail: permission denied for table draft_version
+[ROLE: ulh_governance_approver] [OP: ALTER TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_governance_approver] [OP: DISABLE TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_governance_approver] [OP: DROP TRIGGER] -> DENIED (Code: 42501) Detail: must be owner of relation draft_version
+[ROLE: ulh_governance_approver] [OP: DROP TABLE] -> DENIED (Code: 42501) Detail: must be owner of table draft_version
+[ROLE: ulh_migrator] [OP: SELECT] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_migrator] [OP: INSERT] -> DENIED (Code: 23503) Detail: insert or update on table "draft_version" violates foreign key constraint "draft_version_project_id_fkey"
+[ROLE: ulh_migrator] [OP: UPDATE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow UPDATE
+[ROLE: ulh_migrator] [OP: DELETE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow DELETE
+[ROLE: ulh_migrator] [OP: TRUNCATE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow TRUNCATE
+[ROLE: ulh_migrator] [OP: ALTER TABLE] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_migrator] [OP: DISABLE TRIGGER] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_migrator] [OP: DROP TRIGGER] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: ulh_migrator] [OP: DROP TABLE] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: postgres (Superuser / Admin)] [OP: SELECT] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: postgres (Superuser / Admin)] [OP: INSERT] -> DENIED (Code: 23503) Detail: insert or update on table "draft_version" violates foreign key constraint "draft_version_project_id_fkey"
+[ROLE: postgres (Superuser / Admin)] [OP: UPDATE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow UPDATE
+[ROLE: postgres (Superuser / Admin)] [OP: DELETE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow DELETE
+[ROLE: postgres (Superuser / Admin)] [OP: TRUNCATE] -> DENIED (Code: 55000) Detail: immutable table legal_builder.draft_version does not allow TRUNCATE
+[ROLE: postgres (Superuser / Admin)] [OP: ALTER TABLE] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: postgres (Superuser / Admin)] [OP: DISABLE TRIGGER] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: postgres (Superuser / Admin)] [OP: DROP TRIGGER] -> ALLOWED (Code: ) Detail: Executed successfully
+[ROLE: postgres (Superuser / Admin)] [OP: DROP TABLE] -> ALLOWED (Code: ) Detail: Executed successfully
+
+--- SUPERUSER TRIGGER BYPASS TEST (TRUST BOUNDARY LIMITATION) ---
+[SUPERUSER BYPASS]: Failed: update or delete on table "draft_version" violates foreign key constraint "draft_merge_operation_base_version_id_fkey" on table "draft_merge_operation"
