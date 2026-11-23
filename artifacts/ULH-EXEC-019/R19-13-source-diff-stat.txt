@@ -1,0 +1,6 @@
+ app/web/scripts/seed-development.mjs             | 4 ++--
+ app/web/src/server/amendment-repository.ts       | 8 ++++----
+ app/web/src/server/merge-operation-repository.ts | 4 ++--
+ app/web/src/server/publishing-job-repository.ts  | 4 ++--
+ app/web/src/server/release-package-repository.ts | 4 ++--
+ 5 files changed, 12 insertions(+), 12 deletions(-)

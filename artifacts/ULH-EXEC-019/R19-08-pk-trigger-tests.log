@@ -1,0 +1,4 @@
+[PASS] legal_document_type_definition.code | Non-distinct: ALLOWED | Mutation: BLOCKED 55000
+[PASS] amendment_target.id | Non-distinct: ALLOWED | Mutation: BLOCKED 55000
+[PASS] review_round.id | Non-distinct: ALLOWED | Mutation: BLOCKED 55000
+[PASS] project_creation_profile.project_id | Non-distinct: ALLOWED | Mutation: BLOCKED 55000

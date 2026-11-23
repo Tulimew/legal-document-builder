@@ -1,0 +1,5 @@
+[PASS] TRUNCATE draft_version: BLOCKED 55000
+[PASS] DELETE draft_version: BLOCKED 55000
+[PASS] TRUNCATE checksum_reconciliation_evidence: BLOCKED 55000
+[PASS] DELETE checksum_reconciliation_evidence: BLOCKED 55000
+[PASS] TRUNCATE checksum_reconciliation_approval: BLOCKED 55000
