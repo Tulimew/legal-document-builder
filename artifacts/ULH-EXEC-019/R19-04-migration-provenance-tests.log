@@ -1,0 +1,4 @@
+[PASS] Correct Official Name (0032_checksum_algorithm_markers_and_jcs_enforcement.sql): ALLOWED (00000)
+[PASS] Legacy Discrepant Name (0032_checksum_algorithm_markers_and_jcs.sql): DENIED (23514)
+[PASS] NULL migration name for POST_0032_ENFORCED_JCS_MARKER: DENIED (23514)
+[PASS] Non-existent migration name: DENIED (23514)

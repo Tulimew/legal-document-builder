@@ -1,0 +1,14 @@
+=== R20-05 INDEPENDENT TECHNICAL VERIFICATION TESTS LOG ===
+Timestamp: 2026-11-23T08:57:52.552Z
+Target DB: legal_builder_test_sec_boundary_020 on Port 55432
+
+[TC-01] Valid independent verification reproducing same hash -> PASS (Record inserted successfully with ID: 383fdec0-ebf7-4e2d-9dfa-c14e0e6ce22e)
+[TC-02] Legitimate payload drift detected (distinct non-null hashes) -> PASS
+[TC-03] Payload drift rejected when verified_payload_sha256 equals input_payload_sha256 -> PASS (Denied as expected with Code: 23514: PAYLOAD_DRIFT_DETECTED requires both valid input_payload_sha256 and verified_payload_sha256 to be present and distinct)
+[TC-04] Payload drift rejected when verified_payload_sha256 is NULL -> PASS (Denied as expected with Code: 23514: PAYLOAD_DRIFT_DETECTED requires both valid input_payload_sha256 and verified_payload_sha256 to be present and distinct)
+[TC-05] Disallowed algorithm code in tested_algorithms -> PASS (Denied as expected with Code: 23514: INDEPENDENTLY_REPRODUCED requires matched_algorithms and recomputed_hashes to agree with evidence)
+[TC-06] Mismatched recomputed_hashes when claiming INDEPENDENTLY_REPRODUCED -> PASS (Denied as expected with Code: 23514: verifier matched_algorithms ({LEGACY_JSON_STRINGIFY_SHA256}) does not match hashes equal to persisted_checksum_sha256 ({}))
+[TC-07] Non-independent engine: verifier_engine_id identical to scanner -> PASS (Denied as expected with Code: 23514: independent verifier_engine_id (scanner-node-v1) must differ from scanner calculator_engine_id (scanner-node-v1))
+[TC-08] Non-independent runtime family: verifier_runtime_family identical to scanner -> PASS (Denied as expected with Code: 23514: independent verifier_runtime_family (NODE_JS) must differ from scanner calculator_runtime_family (NODE_JS))
+[TC-09] Missing transaction authentication context -> PASS (Denied as expected with Code: 42501: independent verification requires set_tx_actor_context() with LOCAL_HMAC_SESSION)
+[TC-10] Immutability: Attempting UPDATE on recorded independent verification row -> PASS (Denied as expected with Code: 55000: immutable table legal_builder.checksum_independent_verification does not allow UPDATE)

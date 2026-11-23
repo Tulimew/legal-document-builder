@@ -86,7 +86,7 @@ test("pre-M4 integrity chạy trên PostgreSQL development thật", async (t) =>
     assert.equal(node.content[0].spans[0].reference.kind, "INTERNAL_REFERENCE");
     assert.equal(node.content[3].asset.assetVersionId, (afterContent[3] as Extract<LegalContentBlock, { kind: "FIGURE" }>).asset.assetVersionId);
     assert.equal(row.snapshot_checksum_algorithm_code, CANONICAL_CHECKSUM_ALGORITHM);
-    assert.equal(verifyCanonicalSha256(row.document_snapshot, row.snapshot_checksum_sha256), true);
+    assert.equal(verifyCanonicalSha256(row.document_snapshot, row.snapshot_checksum_sha256, row.snapshot_checksum_algorithm_code), true);
   });
 
   await t.test("LegalChange giữ structured before/after", async () => {

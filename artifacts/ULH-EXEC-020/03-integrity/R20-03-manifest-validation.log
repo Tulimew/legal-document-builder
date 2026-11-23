@@ -1,0 +1,21 @@
+﻿=== R20-03 ARTIFACT MANIFEST VALIDATION LOG ===
+Timestamp: 2026-11-23T15:50:40+07:00
+Scope: artifacts/ULH-EXEC-019
+Total Protected Artifacts: 14
+
+VERIFIED: R19-01-auth-null-tests.log [Size: 2616 bytes, SHA-256: 84875129db30d031634deac4af197773a867f36098e48cdbb15291745011854b] -> OK
+VERIFIED: R19-02-single-user-workflow-tests.log [Size: 351 bytes, SHA-256: 9a5189545f9c919ed5d32a8ffb507cf944338a8a57fcc850301367f78b4f1226] -> OK
+VERIFIED: R19-03-payload-drift-tests.log [Size: 279 bytes, SHA-256: f4ddb8059896f7e16da87dc064db1cedd798b54728119f8614f0f8a0f03f39d5] -> OK
+VERIFIED: R19-04-migration-provenance-tests.log [Size: 323 bytes, SHA-256: f59ba4a47175d0beebc7aa02c297f1860f1700291ebe57c8a1ec5e7cfa41db0c] -> OK
+VERIFIED: R19-05-insert-callsite-inventory.md [Size: 1183 bytes, SHA-256: 4fc07a5cd4f484610802024ab044f9449b8fa2ab2736357b2d3a059056207d13] -> OK
+VERIFIED: R19-06-role-permission-matrix.md [Size: 1082 bytes, SHA-256: fd31f9b8562b4dc4afd95711fcc631a71f3dc8cd3009094e113df79d6762cbf5] -> OK
+VERIFIED: R19-07-decision-matrix-30-cases.csv [Size: 2680 bytes, SHA-256: e975a99572a0c6e05375d71316a2e07c32b262c37ea86b51bb2acc6cd311ad81] -> OK
+VERIFIED: R19-08-pk-trigger-tests.log [Size: 335 bytes, SHA-256: 3910627652ab97fcff006a88fe67803f81a736e79988192f0ef54afc4c6f6754] -> OK
+VERIFIED: R19-09-locator-syntax-tests.log [Size: 884 bytes, SHA-256: a600cc20c7fb02c38e17f012d17b9e4dfd16bda1e42d0c8cc4adb47452ac4d3f] -> OK
+VERIFIED: R19-10-regression-tests.log [Size: 277 bytes, SHA-256: a9e607fdb03e9dfb955e9e639db0831bdc1dadc5a59d32e56de8cedd96a0ac1b] -> OK
+VERIFIED: R19-11-backup-restore-evidence.md [Size: 569 bytes, SHA-256: e2ce9899192772fa3adc46f8576c2fdc43d1005733afa6006f00dbb9c978f5a3] -> OK
+VERIFIED: R19-12-migration-history-and-checksums.log [Size: 6512 bytes, SHA-256: 0a4dd36a5b7d3401f7f4ed228e6d48230f63dc95a47fa661c80b1417bc408fe8] -> OK
+VERIFIED: R19-13-source-diff-stat.txt [Size: 351 bytes, SHA-256: 7a8c646706569c05cd863a7aefdfb04753c1d8ab97674abb84777265c40d6763] -> OK
+VERIFIED: ULH-EXEC-019-FINAL-ACCEPTANCE-REPORT.md [Size: 21827 bytes, SHA-256: efc7fce4300ae2784d5fc2964aa47ce1ae21087c5afeab288c8e369188ed42f2] -> OK
+
+AUDITED (Manifest File Itself): R19-14-artifact-sha256.txt [Size: 1395 bytes, SHA-256: 701926379125f8723e720a5a727337fedd2795cf4b2fc3422075e6f49291dc1d] -> RECORDED_EXTERNALLY

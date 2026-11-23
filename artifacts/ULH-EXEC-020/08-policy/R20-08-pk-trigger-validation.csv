@@ -1,0 +1,9 @@
+table_name,column_tested,operation,expected_status,actual_status,sqlstate,error_message,verdict
+"legal_document_type_definition","non-PK attribute","UPDATE non-PK","ALLOWED","ALLOWED","00000","None","PASS"
+"legal_document_type_definition","code","UPDATE PK","DENIED","DENIED","55000","Column legal_document_type_definition.code is immutable and cannot be updated","PASS"
+"amendment_target","non-PK attribute","UPDATE non-PK","ALLOWED","ALLOWED","00000","None","PASS"
+"amendment_target","id","UPDATE PK","DENIED","DENIED","55000","Column amendment_target.id is immutable and cannot be updated","PASS"
+"review_round","non-PK attribute","UPDATE non-PK","ALLOWED","ALLOWED","00000","None","PASS"
+"review_round","id","UPDATE PK","DENIED","DENIED","55000","Column review_round.id is immutable and cannot be updated","PASS"
+"project_creation_profile","non-PK attribute","UPDATE non-PK","ALLOWED","ALLOWED","00000","None","PASS"
+"project_creation_profile","project_id","UPDATE PK","DENIED","DENIED","55000","Column project_creation_profile.project_id is immutable and cannot be updated","PASS"

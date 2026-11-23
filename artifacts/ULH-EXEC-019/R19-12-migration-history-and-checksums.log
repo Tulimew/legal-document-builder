@@ -1,0 +1,162 @@
+[
+  {
+    "name": "0001_p0_04_foundation.sql",
+    "checksum_sha256": "378dd8329844800f4ad03e1ac3081193ab698c924ba5f4394dd961dd69ed8b82",
+    "applied_at": "2026-11-18T15:17:54.714484+07:00"
+  },
+  {
+    "name": "0003_p0_05_api_foundation.sql",
+    "checksum_sha256": "0068755a66226e18e38073d417d1712080b3f6ec4f99683618b8e8db04091e13",
+    "applied_at": "2026-11-18T15:17:54.739738+07:00"
+  },
+  {
+    "name": "0004_review_and_resolution.sql",
+    "checksum_sha256": "843e153dddf2ced67385f584a5f6f39b2fad8f67a71f3970477f432c8d307f7a",
+    "applied_at": "2026-11-18T15:17:54.797169+07:00"
+  },
+  {
+    "name": "0005_p0_06_iam_foundation.sql",
+    "checksum_sha256": "de2dcd843143aca3602b4e40f0dc8a14e75d9231a7d1624fc68b5fb0a8fc34ce",
+    "applied_at": "2026-11-18T15:17:54.88644+07:00"
+  },
+  {
+    "name": "0006_resolution_deliberation.sql",
+    "checksum_sha256": "f097c9cad529b0a0a8e1c87ca153b932f4baa079061c22d074970ae483cdcf6d",
+    "applied_at": "2026-11-18T15:17:54.939253+07:00"
+  },
+  {
+    "name": "0007_drafting_meeting.sql",
+    "checksum_sha256": "93f0f189d0b08a7a30b92b308f3c5f6ac0cb0ef1c23a90f17dd9a086e137c177",
+    "applied_at": "2026-11-18T15:17:54.957164+07:00"
+  },
+  {
+    "name": "0008_workflow_foundation.sql",
+    "checksum_sha256": "a6da6ee0c2ca2db761ae32619470088dc4de92c0625c415cafff389bd3621a81",
+    "applied_at": "2026-11-18T15:17:54.991758+07:00"
+  },
+  {
+    "name": "0009_multi_document_amendment.sql",
+    "checksum_sha256": "c1c9704602977f8b5da6509f13765e9aa8257d501de89ed57b534476d46e4308",
+    "applied_at": "2026-11-18T15:17:55.058274+07:00"
+  },
+  {
+    "name": "0010_amendment_target_scope_integrity.sql",
+    "checksum_sha256": "730e33bba1bc02a9aa26500366554c96592b7eb2cd9a92f266025743e5e12874",
+    "applied_at": "2026-11-18T15:17:55.075518+07:00"
+  },
+  {
+    "name": "0011_multi_document_layout.sql",
+    "checksum_sha256": "de8dbc86858164d3c94fb7b84d847375f5a4e2145cd2931a2535042943da6541",
+    "applied_at": "2026-11-18T15:17:55.086501+07:00"
+  },
+  {
+    "name": "0012_step4_change_proposal.sql",
+    "checksum_sha256": "c461ce5467807d400f4aad3073231f46849db6ccbeca53631f759ae352a6dff6",
+    "applied_at": "2026-11-18T15:17:55.108148+07:00"
+  },
+  {
+    "name": "0013_step4_finalization.sql",
+    "checksum_sha256": "310f02c013b4005d6979075db135d60d7dd7bd0dbb45ed68e0999de4685ac92d",
+    "applied_at": "2026-11-18T15:17:55.143061+07:00"
+  },
+  {
+    "name": "0014_snapshot_checksum_algorithm.sql",
+    "checksum_sha256": "fb6d05c7f515292c088b6ab8181911534e7d7e469fd0883bc997e4522618b2b5",
+    "applied_at": "2026-11-18T15:17:55.151777+07:00"
+  },
+  {
+    "name": "0015_m5_branch_permissions.sql",
+    "checksum_sha256": "fabb42b85a23059fc0a549c6b8b8e0b1e578940ab02f68976ce9c102f96749da",
+    "applied_at": "2026-11-18T15:17:55.15379+07:00"
+  },
+  {
+    "name": "0016_m5_merge_operation.sql",
+    "checksum_sha256": "9a3b36ab690f99cb8b80bde859d3eb77aa7ab9a8a2aa619d4469bbab63704070",
+    "applied_at": "2026-11-18T15:17:55.187916+07:00"
+  },
+  {
+    "name": "0017_m6_ruleset_and_authoring_finalization.sql",
+    "checksum_sha256": "78aa448a1088497d54eda5105bc0b73b358cf23f82487baa406af6298d341a15",
+    "applied_at": "2026-11-18T15:17:55.224903+07:00"
+  },
+  {
+    "name": "0018_m6_merge_asset_projection.sql",
+    "checksum_sha256": "0007b4466a32dfd3c67f40ab9ce614597b1d5bb8070af2759b75df4e1e629058",
+    "applied_at": "2026-11-18T15:17:55.228301+07:00"
+  },
+  {
+    "name": "0019_m6_development_ruleset_bootstrap.sql",
+    "checksum_sha256": "7e38942c88e19d327722800148874398d6661fcbe217ad430e9fecbdb3d78b8a",
+    "applied_at": "2026-11-18T15:17:55.238819+07:00"
+  },
+  {
+    "name": "0020_m7_publishing_foundation.sql",
+    "checksum_sha256": "12001503448a59066bf258d06fb934b882aeeecc8edb27ebcc5529ea5decd3e1",
+    "applied_at": "2026-11-18T15:17:55.319224+07:00"
+  },
+  {
+    "name": "0021_m7_draft_docx_template.sql",
+    "checksum_sha256": "1438b5e43b0880116c1259c2e4710c1bb98532495a98aa0c74052bd4e2fc59e4",
+    "applied_at": "2026-11-18T15:17:55.335993+07:00"
+  },
+  {
+    "name": "0022_m7_pdf_and_artifact_immutability.sql",
+    "checksum_sha256": "bea9ac60272249abf759ec2d6b5df7fa255f84601fba78a9329b5aa89e8c95e2",
+    "applied_at": "2026-11-18T15:17:55.340215+07:00"
+  },
+  {
+    "name": "0023_m7_publishing_integrity.sql",
+    "checksum_sha256": "893e6d55829f5f7f6d5fbdccd3aed909e7c787b54fa52fffcedf12e45fee7b29",
+    "applied_at": "2026-11-18T15:17:55.391699+07:00"
+  },
+  {
+    "name": "0024_m8_product_operations_permissions.sql",
+    "checksum_sha256": "d7fde8e21bd6109143861be9fa6bcc0ef75917137d85ed8a90203ac820d78daa",
+    "applied_at": "2026-11-18T15:17:55.400165+07:00"
+  },
+  {
+    "name": "0025_m10_security_audit_integrity.sql",
+    "checksum_sha256": "5fd12fdadd4d2ebe0036edfa4122d4305f4f6235d5f64900b6595c4345b8cfa3",
+    "applied_at": "2026-11-18T15:17:55.408529+07:00"
+  },
+  {
+    "name": "0026_m12_local_identity.sql",
+    "checksum_sha256": "b71c63b78f191d09819d1ada95c5a0c8de960a3e73b526708e5c9e9d4f2a04f6",
+    "applied_at": "2026-11-18T15:17:55.42018+07:00"
+  },
+  {
+    "name": "0027_m13_system_administration.sql",
+    "checksum_sha256": "3f3e109c3b0d0230b8c05a9444d16f196be14eba04f9ca0df1ca183fc2f91fa0",
+    "applied_at": "2026-11-18T15:17:55.486044+07:00"
+  },
+  {
+    "name": "0028_m14_ruleset_and_source_ingestion.sql",
+    "checksum_sha256": "43a3b6bd5606ba3edef647b86ddb9cd23ebb9696ce7af03b0564a4ef4e15afcf",
+    "applied_at": "2026-11-18T15:17:55.492846+07:00"
+  },
+  {
+    "name": "0029_ai_provider_administration.sql",
+    "checksum_sha256": "6b0f13055369a14da4baf44c31ef0790737e884bf5bd83af91f588b8f7ee3064",
+    "applied_at": "2026-11-18T15:17:55.503571+07:00"
+  },
+  {
+    "name": "0030_ai_regulatory_report_templates.sql",
+    "checksum_sha256": "248135e03157ad747d85366c8bb636f05e240dc612ae3e18c26a899e715e936c",
+    "applied_at": "2026-11-18T15:17:55.525157+07:00"
+  },
+  {
+    "name": "0031_project_portfolio_docx_sources.sql",
+    "checksum_sha256": "8f66f103d4e40c33f76fd7b60b15a345de1a68e53b0753b242a49c3e79f880bb",
+    "applied_at": "2026-11-18T15:17:55.554829+07:00"
+  },
+  {
+    "name": "0032_checksum_algorithm_markers_and_jcs_enforcement.sql",
+    "checksum_sha256": "f800e617e8bb9a23751b1ecf5a014b465400d8fe1a6dcdd96adbd41c38c863ad",
+    "applied_at": "2026-11-20T16:25:39.147442+07:00"
+  },
+  {
+    "name": "0033_reconciliation_and_evidence_hardening.sql",
+    "checksum_sha256": "84b683c917565940550baa3fe3a340c415402d2bbff1cb405823ec6f1f52194f",
+    "applied_at": "2026-11-23T14:13:11.213831+07:00"
+  }
+]

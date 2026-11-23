@@ -1,0 +1,4 @@
+[PASS] Distinct valid hashes (input != verified): ALLOWED (sqlstate: 00000)
+[PASS] Identical hashes (input == verified): DENIED (sqlstate: 23514)
+[PASS] NULL verified_payload_sha256: DENIED (sqlstate: 23514)
+[PASS] Invalid length verified_payload_sha256: DENIED (sqlstate: 23514)

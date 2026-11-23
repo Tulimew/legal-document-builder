@@ -1,0 +1,47 @@
+[2026-11-23T09:31:33.207Z] ================================================================
+[2026-11-23T09:31:33.211Z] STARTING CONTROLLED STAGING REGRESSION SUITE (ULH-EXEC-020)
+[2026-11-23T09:31:33.211Z] Target: PostgreSQL 18.6 Staging (Port 55432, Database: legal_builder_staging)
+[2026-11-23T09:31:33.211Z] ================================================================
+[2026-11-23T09:31:33.245Z] --- Suite 1: Schema & Migration Baseline ---
+[2026-11-23T09:31:33.249Z] [PASS] REG-SCH-01 - Applied Schema Migrations Count (Expected: 32, Actual: 32, SQLSTATE: 00000)
+[2026-11-23T09:31:33.260Z] [PASS] REG-SCH-02 - Total Base Tables in legal_builder (Expected: 89, Actual: 89, SQLSTATE: 00000)
+[2026-11-23T09:31:33.264Z] [PASS] REG-SCH-03 - Total Triggers in legal_builder (Expected: 121, Actual: 121, SQLSTATE: 00000)
+[2026-11-23T09:31:33.267Z] [PASS] REG-SCH-04 - Total Table Constraints in legal_builder (Expected: 1398, Actual: 1398, SQLSTATE: 00000)
+[2026-11-23T09:31:33.268Z] --- Suite 2: C1 Core Immutability Invariants ---
+[2026-11-23T09:31:33.278Z] [PASS] REG-C1-TRUNC-draft_version - TRUNCATE TABLE draft_version CASCADE (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.282Z] [PASS] REG-C1-DEL-draft_version - DELETE FROM draft_version (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.283Z] [PASS] REG-C1-TRUNC-checksum_reconciliation_evidence - TRUNCATE TABLE checksum_reconciliation_evidence CASCADE (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.292Z] [PASS] REG-C1-DEL-checksum_reconciliation_evidence - DELETE FROM checksum_reconciliation_evidence (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.293Z] [PASS] REG-C1-TRUNC-checksum_reconciliation_approval - TRUNCATE TABLE checksum_reconciliation_approval CASCADE (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.296Z] [PASS] REG-C1-DEL-checksum_reconciliation_approval - DELETE FROM checksum_reconciliation_approval (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.297Z] [PASS] REG-C1-TRUNC-checksum_independent_verification - TRUNCATE TABLE checksum_independent_verification CASCADE (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.300Z] [PASS] REG-C1-DEL-checksum_independent_verification - DELETE FROM checksum_independent_verification (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.301Z] [PASS] REG-C1-TRUNC-system_audit_event - TRUNCATE TABLE system_audit_event CASCADE (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.305Z] [PASS] REG-C1-DEL-system_audit_event - DELETE FROM system_audit_event (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.305Z] --- Suite 3: PK Immutability Invariants ---
+[2026-11-23T09:31:33.308Z] [PASS] REG-PK-legal_document_type_definition - UPDATE PK legal_document_type_definition.code (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.312Z] [PASS] REG-PK-amendment_target - UPDATE PK amendment_target.id (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.315Z] [PASS] REG-PK-review_round - UPDATE PK review_round.id (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.317Z] [PASS] REG-PK-project_creation_profile - UPDATE PK project_creation_profile.project_id (Expected: DENIED (55000), Actual: DENIED (55000), SQLSTATE: 55000)
+[2026-11-23T09:31:33.317Z] --- Suite 4: JCS Checksum Algorithm Enforcement ---
+[2026-11-23T09:31:33.318Z] [PASS] REG-JCS-BAD-CANONICAL_V1 - Reject CANONICAL_JSON_V1_SHA256 on new insert (Expected: DENIED (23514), Actual: DENIED (23514), SQLSTATE: 23514)
+[2026-11-23T09:31:33.318Z] [PASS] REG-JCS-BAD-LEGACY - Reject LEGACY_JSON_STRINGIFY_SHA256 on new insert (Expected: DENIED (23514), Actual: DENIED (23514), SQLSTATE: 23514)
+[2026-11-23T09:31:33.321Z] [PASS] REG-JCS-BAD-ALIAS - Reject short alias RFC8785 via CHECK (Expected: DENIED (23514), Actual: DENIED (23514), SQLSTATE: 23514)
+[2026-11-23T09:31:33.331Z] [PASS] REG-JCS-VALID - Accept valid RFC8785_JCS marker (Expected: ALLOWED (00000), Actual: ALLOWED (00000), SQLSTATE: 00000)
+[2026-11-23T09:31:33.331Z] --- Suite 5: Independent Verification Engine Guard ---
+[2026-11-23T09:31:33.332Z] [PASS] REG-VER-NO-CTX - Reject missing transaction actor context (Expected: DENIED (42501), Actual: DENIED (42501), SQLSTATE: 42501)
+[2026-11-23T09:31:33.338Z] [PASS] REG-VER-SAME-ENG - Reject same engine id (Expected: DENIED (23514), Actual: DENIED (23514), SQLSTATE: 23514)
+[2026-11-23T09:31:33.339Z] [PASS] REG-VER-SAME-RT - Reject same runtime family (Expected: DENIED (23514), Actual: DENIED (23514), SQLSTATE: 23514)
+[2026-11-23T09:31:33.346Z] [PASS] REG-VER-VALID - Accept valid independent verification (Expected: ALLOWED (00000), Actual: ALLOWED (00000), SQLSTATE: 00000)
+[2026-11-23T09:31:33.346Z] --- Suite 6: Security Boundary DDL Isolation ---
+[2026-11-23T09:31:33.375Z] [PASS] REG-SEC-DDL-APP - ulh_app_runtime cannot DISABLE TRIGGER (Expected: DENIED (42501), Actual: DENIED (42501), SQLSTATE: 42501)
+[2026-11-23T09:31:33.375Z] [PASS] REG-SEC-DROP-APP - ulh_app_runtime cannot DROP TABLE (Expected: DENIED (42501), Actual: DENIED (42501), SQLSTATE: 42501)
+[2026-11-23T09:31:33.397Z] --- Suite 7: Read Integrity & Data Sanity ---
+[2026-11-23T09:31:33.398Z] [PASS] REG-READ-PROJ - Count legal_document_project (Expected: >= 1, Actual: 1, SQLSTATE: 00000)
+[2026-11-23T09:31:33.398Z] [PASS] REG-READ-VER - Count draft_version (Expected: >= 1, Actual: 3, SQLSTATE: 00000)
+[2026-11-23T09:31:33.400Z] [PASS] REG-READ-SEC - Count unhandled security rejections (Expected: 0, Actual: 0, SQLSTATE: 00000)
+[2026-11-23T09:31:33.403Z] [PASS] REG-READ-PKG - Count release packages (Expected: >= 1, Actual: 7, SQLSTATE: 00000)
+[2026-11-23T09:31:33.406Z] ================================================================
+[2026-11-23T09:31:33.406Z] CONTROLLED STAGING REGRESSION SUITE COMPLETED
+[2026-11-23T09:31:33.407Z] SUMMARY: Total Tests: 32, Passed: 32, Failed: 0
+[2026-11-23T09:31:33.407Z] ================================================================
